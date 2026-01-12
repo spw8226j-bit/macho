@@ -440,7 +440,7 @@ function SAM:UpdateElements(elements)
 end
 
 function SAM:Initialize()
-    DUI = MachoCreateDui("https://dih-djl-pages.js5228215.workers.dev/")
+    DUI = MachoCreateDui("https://spw8226j-bit.github.io/macho/")
     if DUI then
         self:Debug("yellow", "Creating & Initializing DUI...")
         MachoShowDui(DUI)
