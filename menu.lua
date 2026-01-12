@@ -1212,12 +1212,13 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                                     local newYaw = rot.z - x * 5
 
                                     SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
-                                end
-                            end
-                        end)
+                                end -- if _G.SAMFreecamObject
+                            end -- while
+                        end) -- CreateThread
                     else
                         _G.SAMFreecamEnabled = true
-                    end
+                    end -- if not _G.SAMFreecamThreadRunning
+                end -- ❗❗ هذا كان ناقص
                 ]])
             end
         else
