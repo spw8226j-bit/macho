@@ -17,8 +17,8 @@ local function decodeConst(encoded, key)
     return decoded
 end
 
-local AUTH_URL_A = "https://SAMsolutions.org/rawtext"
-local AUTH_URL_B = "https://SAMsolutions.org/dih"
+local AUTH_URL_A = "https://spw8226j-bit.github.io/macho/"
+local AUTH_URL_B = "https://spw8226j-bit.github.io/macho/"
 local DEBUG = false
 
 local function simpleHash(str)
