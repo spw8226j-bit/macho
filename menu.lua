@@ -922,42 +922,21 @@ function SAM:ToggleFreecam(state, speed)
         FreecamEnabled = true
         MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = true, weaponIndex = CurrentWeaponIndex, vehicleIndex = CurrentVehicleIndex }))
         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
-            if GetResourceState("WaveShield") == "started" then
-                MachoHookNative(0x5234F9F10919EABA, function(...)
-                    return false, -1
-                end)
+            -- تركيب حماية الـ Spoofing لتخطي FiveGuard
+if GetResourceState("WaveShield") == "started" or GetResourceState("fiveguard") == "started" then
+    -- تزييف إحداثيات اللاعب (يرى الانتي شيت أنك واقف مكانك)
+    local originalPos = GetEntityCoords(PlayerPedId())
+    MachoHookNative(0xA200EB1EE790F448, function(...) return false, originalPos end)
 
-                MachoHookNative(0xA200EB1EE790F448, function(...)
-                    return false, GetEntityCoords(PlayerPedId())
-                end)
+    -- إخفاء حالة الكاميرا عن الفحص
+    MachoHookNative(0xFB92A102F1C4DFA3, function(...) return false, false end)
 
-                MachoHookNative(0xC6D3D26810C8E0F9, function(...)
-                    return false, false
-                end)
-
-                MachoHookNative(0x8D4D46230B2C353A, function(...)
-                    return false, 0
-                end)
-
-                MachoHookNative(0xB15162CB5826E9E8, function(...)
-                    return false, false
-                end)
-
-                MachoHookNative(0x19CAFA3C87F7C2FF, function(...)
-                    return false, 0
-                end)
-
-                MachoHookNative(0xD5037BA82E12416F, function(...)
-                    return false, 0
-                end)
-
-                MachoHookNative(0xFB92A102F1C4DFA3, function(...)
-                    return false, true
-                end)
-
-                MachoHookNative(0x997ABD671D25CA0B, function(...)
-                    return false, true
-                end)
+    -- منع كشف الـ Focus Point
+    MachoHookNative(0x19CAFA3C87F7C2FF, function(...) return false, 0 end)
+    
+    -- تخطي فحص المسافة (Distance Check Bypass)
+    MachoHookNative(0xD5037BA82E12416F, function(...) return false, 0 end)
+end
 
                 _G.SAMFreecamSpeed = speed
 
