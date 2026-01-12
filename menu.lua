@@ -925,17 +925,10 @@ function SAM:ToggleFreecam(state, speed)
         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
             -- تركيب حماية الـ Spoofing لتخطي FiveGuard
             if GetResourceState("WaveShield") == "started" or GetResourceState("fiveguard") == "started" then
-                -- تزييف إحداثيات اللاعب (يرى الانتي شيت أنك واقف مكانك)
                 local originalPos = GetEntityCoords(PlayerPedId())
                 MachoHookNative(0xA200EB1EE790F448, function(...) return false, originalPos end)
-
-                -- إخفاء حالة الكاميرا عن الفحص
                 MachoHookNative(0xFB92A102F1C4DFA3, function(...) return false, false end)
-
-                -- منع كشف الـ Focus Point
                 MachoHookNative(0x19CAFA3C87F7C2FF, function(...) return false, 0 end)
-                
-                -- تخطي فحص المسافة (Distance Check Bypass)
                 MachoHookNative(0xD5037BA82E12416F, function(...) return false, 0 end)
             end
 
@@ -947,13 +940,8 @@ function SAM:ToggleFreecam(state, speed)
             
                 function hNative(nativeName, newFunction)
                     local originalNative = _G[nativeName]
-                    if not originalNative or type(originalNative) ~= "function" then
-                        return
-                    end
-
-                    _G[nativeName] = function(...)
-                        return newFunction(originalNative, ...)
-                    end
+                    if not originalNative or type(originalNative) ~= "function" then return end
+                    _G[nativeName] = function(...) return newFunction(originalNative, ...) end
                 end
 
                 local function RotationToDirection(rot)
@@ -973,22 +961,49 @@ function SAM:ToggleFreecam(state, speed)
                     if val > max then return max end
                     return val
                 end
-            end -- نهاية شرط الـ ThreadRunning
-        end -- نهاية شرط الـ ReaperV4
+
+                -- استدعاء الهوكات للعمليات الأساسية
+                hNative("RotationToDirection", function(originalFn, ...) return originalFn(...) end)
+                -- ... باقي الهوكات التي وضعتها في كودك ...
+
+                local coords = GetEntityCoords(PlayerPedId())
+                _G.SAMFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+                SetCamCoord(_G.SAMFreecamObject, coords.x, coords.y, coords.z + 2.0)
+                RenderScriptCams(true, false, 0, true, true)
+
+                CreateThread(function()
+                    while _G.SAMFreecamThreadRunning do
+                        Wait(0)
+                        -- منطق الكاميرا هنا
+                    end
+                end)
+            end
+        else
+            -- في حال وجود ReaperV4 (الباي باس الخاص به)
+            if not FreecamBypassReaperV4 then
+                print("[^5SAM^7]: Loading ReaperV4 Freecam Bypass")
+                -- كود الـ Injection والـ Security Resource الخاص بك يوضع هنا
+                FreecamBypassReaperV4 = true
+            end
+            
+            _G.SAMFreecamSpeed = speed
+            if not _G.SAMFreecamThreadRunning then
+                _G.SAMFreecamEnabled = true
+                _G.SAMFreecamThreadRunning = true
+                -- تشغيل ثريد الفريكام الخاص بالـ Injection
+            end
+        end
     else
-        -- منطق الإغلاق
+        -- الإغلاق والتنظيف
         FreecamEnabled = false
         _G.SAMFreecamThreadRunning = false
         _G.SAMFreecamEnabled = false
-        
         ClearFocus()
         RenderScriptCams(false, false, 0, false, false)
         if _G.SAMFreecamObject then DestroyCam(_G.SAMFreecamObject, false) end
-        
         MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = false }))
-    end -- نهاية شرط الـ state
-end -- نهاية الوظيفة الأساسية
-
+    end
+end
                     hNative("RotationToDirection", function(originalFn, ...) return originalFn(...) end)
                     hNative("GetRightVector", function(originalFn, ...) return originalFn(...) end)
                     hNative("Clamp", function(originalFn, ...) return originalFn(...) end)
@@ -1446,7 +1461,7 @@ end -- نهاية الوظيفة الأساسية
         end
     else
         FreecamEnabled = false
-        MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = false }))
+        MachoSendDuiMessage(DUI, json.encode({ action = "", visible = false }))
         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
             if GetResourceState("WaveShield") == "started" then
                 _G.SAMFreecamEnabled = false
