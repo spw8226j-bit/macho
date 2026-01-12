@@ -1089,7 +1089,6 @@ end
                     end)
                 else
                     _G.SAMFreecamEnabled = true
-                end
             else
                 Injection(GetResourceState("monitor") == "started" and "monitor" or "any", [[
                 print("hello im inside of a resource")
