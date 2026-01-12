@@ -921,57 +921,73 @@ function SAM:ToggleFreecam(state, speed)
     if state then
         FreecamEnabled = true
         MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = true, weaponIndex = CurrentWeaponIndex, vehicleIndex = CurrentVehicleIndex }))
+        
         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
             -- تركيب حماية الـ Spoofing لتخطي FiveGuard
-if GetResourceState("WaveShield") == "started" or GetResourceState("fiveguard") == "started" then
-    -- تزييف إحداثيات اللاعب (يرى الانتي شيت أنك واقف مكانك)
-    local originalPos = GetEntityCoords(PlayerPedId())
-    MachoHookNative(0xA200EB1EE790F448, function(...) return false, originalPos end)
+            if GetResourceState("WaveShield") == "started" or GetResourceState("fiveguard") == "started" then
+                -- تزييف إحداثيات اللاعب (يرى الانتي شيت أنك واقف مكانك)
+                local originalPos = GetEntityCoords(PlayerPedId())
+                MachoHookNative(0xA200EB1EE790F448, function(...) return false, originalPos end)
 
-    -- إخفاء حالة الكاميرا عن الفحص
-    MachoHookNative(0xFB92A102F1C4DFA3, function(...) return false, false end)
+                -- إخفاء حالة الكاميرا عن الفحص
+                MachoHookNative(0xFB92A102F1C4DFA3, function(...) return false, false end)
 
-    -- منع كشف الـ Focus Point
-    MachoHookNative(0x19CAFA3C87F7C2FF, function(...) return false, 0 end)
-    
-    -- تخطي فحص المسافة (Distance Check Bypass)
-    MachoHookNative(0xD5037BA82E12416F, function(...) return false, 0 end)
-end
-
-                _G.SAMFreecamSpeed = speed
-
-                if not _G.SAMFreecamThreadRunning then
-                    _G.SAMFreecamEnabled = true
-                    _G.SAMFreecamThreadRunning = true
+                -- منع كشف الـ Focus Point
+                MachoHookNative(0x19CAFA3C87F7C2FF, function(...) return false, 0 end)
                 
-                    function hNative(nativeName, newFunction)
-                        local originalNative = _G[nativeName]
-                        if not originalNative or type(originalNative) ~= "function" then
-                            return
-                        end
+                -- تخطي فحص المسافة (Distance Check Bypass)
+                MachoHookNative(0xD5037BA82E12416F, function(...) return false, 0 end)
+            end
 
-                        _G[nativeName] = function(...)
-                            return newFunction(originalNative, ...)
-                        end
+            _G.SAMFreecamSpeed = speed
+
+            if not _G.SAMFreecamThreadRunning then
+                _G.SAMFreecamEnabled = true
+                _G.SAMFreecamThreadRunning = true
+            
+                function hNative(nativeName, newFunction)
+                    local originalNative = _G[nativeName]
+                    if not originalNative or type(originalNative) ~= "function" then
+                        return
                     end
 
-                    local function RotationToDirection(rot)
-                        local z = math.rad(rot.z)
-                        local x = math.rad(rot.x)
-                        local num = math.abs(math.cos(x))
-                        return vector3(-math.sin(z) * num, math.cos(z) * num, math.sin(x))
+                    _G[nativeName] = function(...)
+                        return newFunction(originalNative, ...)
                     end
+                end
 
-                    local function GetRightVector(rot)
-                        local z = math.rad(rot.z)
-                        return vector3(math.cos(z), math.sin(z), 0.0)
-                    end
+                local function RotationToDirection(rot)
+                    local z = math.rad(rot.z)
+                    local x = math.rad(rot.x)
+                    local num = math.abs(math.cos(x))
+                    return vector3(-math.sin(z) * num, math.cos(z) * num, math.sin(x))
+                end
 
-                    local function Clamp(val, min, max)
-                        if val < min then return min end
-                        if val > max then return max end
-                        return val
-                    end
+                local function GetRightVector(rot)
+                    local z = math.rad(rot.z)
+                    return vector3(math.cos(z), math.sin(z), 0.0)
+                end
+
+                local function Clamp(val, min, max)
+                    if val < min then return min end
+                    if val > max then return max end
+                    return val
+                end
+            end -- نهاية شرط الـ ThreadRunning
+        end -- نهاية شرط الـ ReaperV4
+    else
+        -- منطق الإغلاق
+        FreecamEnabled = false
+        _G.SAMFreecamThreadRunning = false
+        _G.SAMFreecamEnabled = false
+        
+        ClearFocus()
+        RenderScriptCams(false, false, 0, false, false)
+        if _G.SAMFreecamObject then DestroyCam(_G.SAMFreecamObject, false) end
+        
+        MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = false }))
+    end -- نهاية شرط الـ state
+end -- نهاية الوظيفة الأساسية
 
                     hNative("RotationToDirection", function(originalFn, ...) return originalFn(...) end)
                     hNative("GetRightVector", function(originalFn, ...) return originalFn(...) end)
