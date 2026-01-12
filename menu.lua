@@ -1086,10 +1086,11 @@ end
                                 SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
                             end
                         end
-                    end)
+                    end) -- نهاية الـ CreateThread
                 else
                     _G.SAMFreecamEnabled = true
-            else
+                end -- نهاية الـ if not _G.SAMFreecamThreadRunning
+            end -- نهاية شرط الـ ReaperV4 / FiveGuard
                 Injection(GetResourceState("monitor") == "started" and "monitor" or "any", [[
                 print("hello im inside of a resource")
                     _G.SAMFreecamSpeed = ]] .. speed .. [[
