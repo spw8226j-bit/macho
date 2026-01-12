@@ -925,11 +925,12 @@ function OSINT:ToggleFreecam(state, speed)
     -- تأخير بسيط لتضليل الأنظمة
     Wait(math.random(200, 600))
 
+    -- فحص حالة السيرفر والموارد
     if GetResourceState(_R) ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
         if GetResourceState(_WS) == "started" or GetResourceState(_FG) == "started" then
             local originalPos = GetEntityCoords(PlayerPedId())
             
-            -- هوك ذكي مع إضافة Noise بسيط (0.001) لتبدو الحركة حقيقية
+            -- هوك ذكي مع إضافة Noise بسيط
             MachoHookNative(0xA200EB1EE790F448, function(...) 
                 local noise = vector3(math.random(-10, 10)/1000, math.random(-10, 10)/1000, 0)
                 return false, originalPos + noise 
