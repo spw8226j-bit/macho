@@ -1053,44 +1053,48 @@ end
                     SetCamRot(_G.SAMFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
                     RenderScriptCams(true, false, 0, true, true)
                     
-                    CreateThread(function()
-                        while _G.SAMFreecamThreadRunning do
-                            Wait(0)
+                    if not _G.SAMFreecamThreadRunning then
+    _G.SAMFreecamThreadRunning = true
 
-                            if _G.SAMFreecamObject then
-                                local coords = GetCamCoord(_G.SAMFreecamObject)
-                                local rot = GetCamRot(_G.SAMFreecamObject, 2)
-                                local beforeSpeed = _G.SAMFreecamSpeed or 0.25
-                                local speed = IsControlPressed(0, 21) and beforeSpeed + 1.0 or beforeSpeed
-                                local forward = RotationToDirection(rot)
-                                local right = GetRightVector(rot)
-                                local moveX, moveY, moveZ = 0, 0, 0
+    CreateThread(function()
+        while _G.SAMFreecamThreadRunning do
+            Wait(0)
 
-                                TaskStandStill(PlayerPedId(), 10)
-                                SetFocusPosAndVel(coords.x, coords.y, coords.z, 0.0, 0.0, 0.0)
+            if _G.SAMFreecamObject then
+                local coords = GetCamCoord(_G.SAMFreecamObject)
+                local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                local beforeSpeed = _G.SAMFreecamSpeed or 0.25
+                local speed = IsControlPressed(0, 21) and beforeSpeed + 1.0 or beforeSpeed
+                local forward = RotationToDirection(rot)
+                local right = GetRightVector(rot)
+                local moveX, moveY, moveZ = 0, 0, 0
 
-                                if IsControlPressed(0, 32) then moveX = moveX + forward.x * speed moveY = moveY + forward.y * speed moveZ = moveZ + forward.z * speed end
-                                if IsControlPressed(0, 33) then moveX = moveX - forward.x * speed moveY = moveY - forward.y * speed moveZ = moveZ - forward.z * speed end
-                                if IsControlPressed(0, 34) then moveX = moveX - right.x * speed moveY = moveY - right.y * speed end
-                                if IsControlPressed(0, 35) then moveX = moveX + right.x * speed moveY = moveY + right.y * speed end
-                                if IsControlPressed(0, 22) then moveZ = moveZ + speed end
-                                if IsControlPressed(0, 36) then moveZ = moveZ - speed end
+                TaskStandStill(PlayerPedId(), 10)
+                SetFocusPosAndVel(coords.x, coords.y, coords.z, 0.0, 0.0, 0.0)
 
-                                SetCamCoord(_G.SAMFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
+                if IsControlPressed(0, 32) then moveX = moveX + forward.x * speed moveY = moveY + forward.y * speed moveZ = moveZ + forward.z * speed end
+                if IsControlPressed(0, 33) then moveX = moveX - forward.x * speed moveY = moveY - forward.y * speed moveZ = moveZ - forward.z * speed end
+                if IsControlPressed(0, 34) then moveX = moveX - right.x * speed moveY = moveY - right.y * speed end
+                if IsControlPressed(0, 35) then moveX = moveX + right.x * speed moveY = moveY + right.y * speed end
+                if IsControlPressed(0, 22) then moveZ = moveZ + speed end
+                if IsControlPressed(0, 36) then moveZ = moveZ - speed end
 
-                                local x = GetDisabledControlNormal(0, 1)
-                                local y = GetDisabledControlNormal(0, 2)
-                                local newPitch = Clamp(rot.x - y * 5, -89.0, 89.0)
-                                local newYaw = rot.z - x * 5
+                SetCamCoord(_G.SAMFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
 
-                                SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
-                            end
-                        end
-                    end) -- نهاية الـ CreateThread
-                else
-                    _G.SAMFreecamEnabled = true
-                end -- نهاية الـ if not _G.SAMFreecamThreadRunning
-            end -- نهاية شرط الـ ReaperV4 / FiveGuard
+                local x = GetDisabledControlNormal(0, 1)
+                local y = GetDisabledControlNormal(0, 2)
+                local newPitch = Clamp(rot.x - y * 5, -89.0, 89.0)
+                local newYaw = rot.z - x * 5
+
+                SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
+            end
+        end
+    end) -- نهاية الـ CreateThread
+
+else
+    _G.SAMFreecamEnabled = true
+end -- نهاية الـ if not _G.SAMFreecamThreadRunning
+
                 Injection(GetResourceState("monitor") == "started" and "monitor" or "any", [[
                 print("hello im inside of a resource")
                     _G.SAMFreecamSpeed = ]] .. speed .. [[
