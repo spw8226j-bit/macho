@@ -158,7 +158,7 @@ local AuthenticateUser = function()
 end
 
 ---@diagnostic disable: undefined-global
-local SAM = {}
+local OSINT = {}
 local IsVisible = false
 local DUI = nil
 local HoveredIndex = 1
@@ -184,7 +184,7 @@ local CurrentWeaponIndex = 1
 local CurrentVehicleIndex = 1
 local FreecamWeaponList = { "WEAPON_APPISTOL", "WEAPON_PISTOL", "WEAPON_SMG", "WEAPON_ASSAULTRIFLE", "WEAPON_RPG", "WEAPON_PERMKILL", "WEAPON_AIRSTRIKE_ROCKET" }
 local FreecamVehicleList = { "Adder", "Zentorno", "Comet", "Banshee", "Trash", "Dump" }
-local FreecamOptions = { "1Default1", "Teleport", "Shoot Weapon", "Kick from Vehicle", "Hijack Vehicle", "Delete Vehicle" }
+local FreecamOptions = { "Default", "Teleport", "Shoot Weapon", "Kick from Vehicle", "Hijack Vehicle", "Delete Vehicle" }
 local FreecamHoveredIndex = 1
 local IsFalling = false
 local NoCollision = false
@@ -385,14 +385,14 @@ local InjectionType = GetResourceState("WaveShield") == "started" and "Raw" or "
 local Injection = InjectionType == "Raw" and MachoInjectResourceRaw or MachoInjectResource
 
 ---@param text string
-function SAM:Debug(color, text)
+function OSINT:Debug(color, text)
     local debugColors = { ["red"] = "^1", ["yellow"] = "^3", ["green"] = "^2", ["info"] = "^5" }
     local debugColor = debugColors[color] or "^5"
-    print(("^7[^5SAM^7]: [%sDEBUG^7] >> %s"):format(debugColor, text))
+    print(("^7[^SAM^7]: [%sDEBUG^7] >> %s"):format(debugColor, text))
 end
 
 ---@param data table
-function SAM:SendMessage(data)
+function OSINT:SendMessage(data)
     if not DUI or not data or type(data) ~= "table" then
         return
     end
@@ -404,11 +404,11 @@ end
 ---@param title string
 ---@param desc string
 ---@param duration number
-function SAM:Notify(type, title, desc, duration)
+function OSINT:Notify(type, title, desc, duration)
     self:SendMessage({ action = "showNotification", type = type, title = title, desc = desc, duration = duration })
 end
 
-function SAM:GetMenuPath()
+function OSINT:GetMenuPath()
     local path = { "SAM" }
 
     for i = 1, #MenuLabelStack do
@@ -419,7 +419,7 @@ function SAM:GetMenuPath()
 end
 
 ---@param elements table
-function SAM:UpdateElements(elements)
+function OSINT:UpdateElements(elements)
     if not elements or type(elements) ~= "table" then
         return
     end
@@ -439,7 +439,7 @@ function SAM:UpdateElements(elements)
     self:SendMessage(payload)
 end
 
-function SAM:Initialize()
+function OSINT:Initialize()
     DUI = MachoCreateDui("https://spw8226j-bit.github.io/macho/")
     if DUI then
         self:Debug("yellow", "Creating & Initializing DUI...")
@@ -450,7 +450,7 @@ function SAM:Initialize()
     end
 end
 
-function SAM:HideUI(keepState)
+function OSINT:HideUI(keepState)
     if keepState then
         LastUIState = {
             currentMenu = CurrentMenu,
@@ -469,7 +469,7 @@ function SAM:HideUI(keepState)
     self:SendMessage({ action = "showUI", visible = false, index = 0 })
 end
 
-function SAM:ShowUI()
+function OSINT:ShowUI()
     IsVisible = true
 
     if LastUIState then
@@ -495,7 +495,7 @@ function SAM:ShowUI()
         elements = CurrentMenu,
         index = HoveredIndex - 1,
         path = self:GetMenuPath(),
-        username = Username or "SAMBypass"
+        username = Username or "SAM"
     }
 
     if CurrentCategories and #CurrentCategories > 0 then
@@ -506,7 +506,7 @@ function SAM:ShowUI()
     self:SendMessage(payload)
 end
 
-function SAM:IsShiftHeld()
+function OSINT:IsShiftHeld()
     return ShiftHolding
 end
 
@@ -553,7 +553,7 @@ local function KeyboardInput(Title, Value, OnConfirm, InputType)
     end
 
     Wait(250)
-    SAM:HideUI(true)
+    OSINT:HideUI(true)
     MenuOpenable = false
 end
 
@@ -638,7 +638,7 @@ MachoOnKeyDown(function(vk)
 
             local char = AllowedChars[vk]
             if char and #CurrentKeyboardInput.buffer < CurrentKeyboardInput.maxLength then
-                if SAM:IsShiftHeld() then
+                if OSINT:IsShiftHeld() then
                     if char:match("%a") then
                         char = char:upper()
                     elseif char == "-" then
@@ -698,7 +698,7 @@ end)
 
 --- Scrolling function for normal navigation
 ---@param direction "Up"|"Down"
-function SAM:ScrollOne(direction)
+function OSINT:ScrollOne(direction)
     if not direction or #CurrentMenu == 0 then
         return
     end
@@ -723,7 +723,7 @@ end
 
 --- Scrolling function for scrollable/slider tab navigation
 ---@param direction "Left"|"Right"
-function SAM:ScrollTwo(direction)
+function OSINT:ScrollTwo(direction)
     local hoveredTab = CurrentMenu[HoveredIndex]
     if not hoveredTab then return end
 
@@ -783,7 +783,7 @@ function SAM:ScrollTwo(direction)
     end
 end
 
-function SAM:Enter()
+function OSINT:Enter()
     if not CurrentMenu or #CurrentMenu == 0 then return end
     local current = CurrentMenu[HoveredIndex]
     if not current then return end
@@ -794,7 +794,7 @@ function SAM:Enter()
         table.insert(MenuLabelStack, current.label or "Submenu")
 
         if current.type == "Server" then
-            SAM:UpdateListMenu()
+            OSINT:UpdateListMenu()
         end
 
         if current.categories and type(current.categories) == "table" and #current.categories > 0 then
@@ -826,7 +826,7 @@ function SAM:Enter()
 
     if current.type == "checkbox" or current.type == "scrollable-checkbox" or current.type == "slider-checkbox" then
         if current.locked then
-            self:Notify("error", "SAM", "This module has been disabled due to high detection rates!", 3000)
+            self:Notify("error", "OSINT", "This module has been disabled due to high detection rates!", 3000)
             return
         end
 
@@ -877,7 +877,7 @@ end
 
 local firstFallbackBlocked = false
 
-function SAM:Backspace()
+function OSINT:Backspace()
     if #MenuStack > 0 then
         local last = table.remove(MenuStack)
         table.remove(MenuLabelStack)
@@ -891,7 +891,7 @@ function SAM:Backspace()
     end
 end
 
-function SAM:PrevCategory()
+function OSINT:PrevCategory()
     if not CurrentCategories or #CurrentCategories == 0 then return end
     CurrentCategoryIndex = CurrentCategoryIndex - 1
     if CurrentCategoryIndex < 1 then CurrentCategoryIndex = #CurrentCategories end
@@ -901,7 +901,7 @@ function SAM:PrevCategory()
     self:SendMessage({ action = "keydown", index = HoveredIndex - 1 })
 end
 
-function SAM:NextCategory()
+function OSINT:NextCategory()
     if not CurrentCategories or #CurrentCategories == 0 then return end
     CurrentCategoryIndex = CurrentCategoryIndex + 1
     if CurrentCategoryIndex > #CurrentCategories then CurrentCategoryIndex = 1 end
@@ -913,7 +913,7 @@ end
 
 ---@param state boolean
 ---@param speed number
-function SAM:ToggleFreecam(state, speed)
+function OSINT:ToggleFreecam(state, speed)
     if type(state) ~= "boolean" then
         return
     end
@@ -921,89 +921,79 @@ function SAM:ToggleFreecam(state, speed)
     if state then
         FreecamEnabled = true
         MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = true, weaponIndex = CurrentWeaponIndex, vehicleIndex = CurrentVehicleIndex }))
-        
         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
-            -- تركيب حماية الـ Spoofing لتخطي FiveGuard
-            if GetResourceState("WaveShield") == "started" or GetResourceState("fiveguard") == "started" then
-                local originalPos = GetEntityCoords(PlayerPedId())
-                MachoHookNative(0xA200EB1EE790F448, function(...) return false, originalPos end)
-                MachoHookNative(0xFB92A102F1C4DFA3, function(...) return false, false end)
-                MachoHookNative(0x19CAFA3C87F7C2FF, function(...) return false, 0 end)
-                MachoHookNative(0xD5037BA82E12416F, function(...) return false, 0 end)
-            end
-
-            _G.SAMFreecamSpeed = speed
-
-            if not _G.SAMFreecamThreadRunning then
-                _G.SAMFreecamEnabled = true
-                _G.SAMFreecamThreadRunning = true
-            
-                function hNative(nativeName, newFunction)
-                    local originalNative = _G[nativeName]
-                    if not originalNative or type(originalNative) ~= "function" then return end
-                    _G[nativeName] = function(...) return newFunction(originalNative, ...) end
-                end
-
-                local function RotationToDirection(rot)
-                    local z = math.rad(rot.z)
-                    local x = math.rad(rot.x)
-                    local num = math.abs(math.cos(x))
-                    return vector3(-math.sin(z) * num, math.cos(z) * num, math.sin(x))
-                end
-
-                local function GetRightVector(rot)
-                    local z = math.rad(rot.z)
-                    return vector3(math.cos(z), math.sin(z), 0.0)
-                end
-
-                local function Clamp(val, min, max)
-                    if val < min then return min end
-                    if val > max then return max end
-                    return val
-                end
-
-                -- استدعاء الهوكات للعمليات الأساسية
-                hNative("RotationToDirection", function(originalFn, ...) return originalFn(...) end)
-                -- ... باقي الهوكات التي وضعتها في كودك ...
-
-                local coords = GetEntityCoords(PlayerPedId())
-                _G.SAMFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-                SetCamCoord(_G.SAMFreecamObject, coords.x, coords.y, coords.z + 2.0)
-                RenderScriptCams(true, false, 0, true, true)
-
-                CreateThread(function()
-                    while _G.SAMFreecamThreadRunning do
-                        Wait(0)
-                        -- منطق الكاميرا هنا
-                    end
+            if GetResourceState("WaveShield") == "started" then
+                MachoHookNative(0x5234F9F10919EABA, function(...)
+                    return false, -1
                 end)
-            end
-        else
-            -- في حال وجود ReaperV4 (الباي باس الخاص به)
-            if not FreecamBypassReaperV4 then
-                print("[^5SAM^7]: Loading ReaperV4 Freecam Bypass")
-                -- كود الـ Injection والـ Security Resource الخاص بك يوضع هنا
-                FreecamBypassReaperV4 = true
-            end
-            
-            _G.SAMFreecamSpeed = speed
-            if not _G.SAMFreecamThreadRunning then
-                _G.SAMFreecamEnabled = true
-                _G.SAMFreecamThreadRunning = true
-                -- تشغيل ثريد الفريكام الخاص بالـ Injection
-            end
-        end
-    else
-        -- الإغلاق والتنظيف
-        FreecamEnabled = false
-        _G.SAMFreecamThreadRunning = false
-        _G.SAMFreecamEnabled = false
-        ClearFocus()
-        RenderScriptCams(false, false, 0, false, false)
-        if _G.SAMFreecamObject then DestroyCam(_G.SAMFreecamObject, false) end
-        MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = false }))
-    end
-end
+
+                MachoHookNative(0xA200EB1EE790F448, function(...)
+                    return false, GetEntityCoords(PlayerPedId())
+                end)
+
+                MachoHookNative(0xC6D3D26810C8E0F9, function(...)
+                    return false, false
+                end)
+
+                MachoHookNative(0x8D4D46230B2C353A, function(...)
+                    return false, 0
+                end)
+
+                MachoHookNative(0xB15162CB5826E9E8, function(...)
+                    return false, false
+                end)
+
+                MachoHookNative(0x19CAFA3C87F7C2FF, function(...)
+                    return false, 0
+                end)
+
+                MachoHookNative(0xD5037BA82E12416F, function(...)
+                    return false, 0
+                end)
+
+                MachoHookNative(0xFB92A102F1C4DFA3, function(...)
+                    return false, true
+                end)
+
+                MachoHookNative(0x997ABD671D25CA0B, function(...)
+                    return false, true
+                end)
+
+                _G.OSINTFreecamSpeed = speed
+
+                if not _G.OSINTFreecamThreadRunning then
+                    _G.OSINTFreecamEnabled = true
+                    _G.OSINTFreecamThreadRunning = true
+                
+                    function hNative(nativeName, newFunction)
+                        local originalNative = _G[nativeName]
+                        if not originalNative or type(originalNative) ~= "function" then
+                            return
+                        end
+
+                        _G[nativeName] = function(...)
+                            return newFunction(originalNative, ...)
+                        end
+                    end
+
+                    local function RotationToDirection(rot)
+                        local z = math.rad(rot.z)
+                        local x = math.rad(rot.x)
+                        local num = math.abs(math.cos(x))
+                        return vector3(-math.sin(z) * num, math.cos(z) * num, math.sin(x))
+                    end
+
+                    local function GetRightVector(rot)
+                        local z = math.rad(rot.z)
+                        return vector3(math.cos(z), math.sin(z), 0.0)
+                    end
+
+                    local function Clamp(val, min, max)
+                        if val < min then return min end
+                        if val > max then return max end
+                        return val
+                    end
+
                     hNative("RotationToDirection", function(originalFn, ...) return originalFn(...) end)
                     hNative("GetRightVector", function(originalFn, ...) return originalFn(...) end)
                     hNative("Clamp", function(originalFn, ...) return originalFn(...) end)
@@ -1048,60 +1038,56 @@ end
                     hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
                     local coords = GetEntityCoords(PlayerPedId())
-                    _G.SAMFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-                    SetCamCoord(_G.SAMFreecamObject, coords.x, coords.y, coords.z + 2.0)
-                    SetCamRot(_G.SAMFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
+                    _G.OSINTFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+                    SetCamCoord(_G.OSINTFreecamObject, coords.x, coords.y, coords.z + 2.0)
+                    SetCamRot(_G.OSINTFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
                     RenderScriptCams(true, false, 0, true, true)
                     
-                    if not _G.SAMFreecamThreadRunning then
-    _G.SAMFreecamThreadRunning = true
+                    CreateThread(function()
+                        while _G.OSINTFreecamThreadRunning do
+                            Wait(0)
 
-    CreateThread(function()
-        while _G.SAMFreecamThreadRunning do
-            Wait(0)
+                            if _G.OSINTFreecamObject then
+                                local coords = GetCamCoord(_G.OSINTFreecamObject)
+                                local rot = GetCamRot(_G.OSINTFreecamObject, 2)
+                                local beforeSpeed = _G.OSINTFreecamSpeed or 0.25
+                                local speed = IsControlPressed(0, 21) and beforeSpeed + 1.0 or beforeSpeed
+                                local forward = RotationToDirection(rot)
+                                local right = GetRightVector(rot)
+                                local moveX, moveY, moveZ = 0, 0, 0
 
-            if _G.SAMFreecamObject then
-                local coords = GetCamCoord(_G.SAMFreecamObject)
-                local rot = GetCamRot(_G.SAMFreecamObject, 2)
-                local beforeSpeed = _G.SAMFreecamSpeed or 0.25
-                local speed = IsControlPressed(0, 21) and beforeSpeed + 1.0 or beforeSpeed
-                local forward = RotationToDirection(rot)
-                local right = GetRightVector(rot)
-                local moveX, moveY, moveZ = 0, 0, 0
+                                TaskStandStill(PlayerPedId(), 10)
+                                SetFocusPosAndVel(coords.x, coords.y, coords.z, 0.0, 0.0, 0.0)
 
-                TaskStandStill(PlayerPedId(), 10)
-                SetFocusPosAndVel(coords.x, coords.y, coords.z, 0.0, 0.0, 0.0)
+                                if IsControlPressed(0, 32) then moveX = moveX + forward.x * speed moveY = moveY + forward.y * speed moveZ = moveZ + forward.z * speed end
+                                if IsControlPressed(0, 33) then moveX = moveX - forward.x * speed moveY = moveY - forward.y * speed moveZ = moveZ - forward.z * speed end
+                                if IsControlPressed(0, 34) then moveX = moveX - right.x * speed moveY = moveY - right.y * speed end
+                                if IsControlPressed(0, 35) then moveX = moveX + right.x * speed moveY = moveY + right.y * speed end
+                                if IsControlPressed(0, 22) then moveZ = moveZ + speed end
+                                if IsControlPressed(0, 36) then moveZ = moveZ - speed end
 
-                if IsControlPressed(0, 32) then moveX = moveX + forward.x * speed moveY = moveY + forward.y * speed moveZ = moveZ + forward.z * speed end
-                if IsControlPressed(0, 33) then moveX = moveX - forward.x * speed moveY = moveY - forward.y * speed moveZ = moveZ - forward.z * speed end
-                if IsControlPressed(0, 34) then moveX = moveX - right.x * speed moveY = moveY - right.y * speed end
-                if IsControlPressed(0, 35) then moveX = moveX + right.x * speed moveY = moveY + right.y * speed end
-                if IsControlPressed(0, 22) then moveZ = moveZ + speed end
-                if IsControlPressed(0, 36) then moveZ = moveZ - speed end
+                                SetCamCoord(_G.OSINTFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
 
-                SetCamCoord(_G.SAMFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
+                                local x = GetDisabledControlNormal(0, 1)
+                                local y = GetDisabledControlNormal(0, 2)
+                                local newPitch = Clamp(rot.x - y * 5, -89.0, 89.0)
+                                local newYaw = rot.z - x * 5
 
-                local x = GetDisabledControlNormal(0, 1)
-                local y = GetDisabledControlNormal(0, 2)
-                local newPitch = Clamp(rot.x - y * 5, -89.0, 89.0)
-                local newYaw = rot.z - x * 5
-
-                SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
-            end
-        end
-    end) -- نهاية الـ CreateThread
-
-else
-    _G.SAMFreecamEnabled = true
-end -- نهاية الـ if not _G.SAMFreecamThreadRunning
-
+                                SetCamRot(_G.OSINTFreecamObject, newPitch, rot.y, newYaw, 2)
+                            end
+                        end
+                    end)
+                else
+                    _G.OSINTFreecamEnabled = true
+                end
+            else
                 Injection(GetResourceState("monitor") == "started" and "monitor" or "any", [[
                 print("hello im inside of a resource")
-                    _G.SAMFreecamSpeed = ]] .. speed .. [[
+                    _G.OSINTFreecamSpeed = ]] .. speed .. [[
 
-                    if not _G.SAMFreecamThreadRunning then
-                        _G.SAMFreecamEnabled = true
-                        _G.SAMFreecamThreadRunning = true
+                    if not _G.OSINTFreecamThreadRunning then
+                        _G.OSINTFreecamEnabled = true
+                        _G.OSINTFreecamThreadRunning = true
                     
                         function hNative(nativeName, newFunction)
                             local originalNative = _G[nativeName]
@@ -1176,19 +1162,19 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                         hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
                         local coords = GetEntityCoords(PlayerPedId())
-                        _G.SAMFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-                        SetCamCoord(_G.SAMFreecamObject, coords.x, coords.y, coords.z + 2.0)
-                        SetCamRot(_G.SAMFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
+                        _G.OSINTFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+                        SetCamCoord(_G.OSINTFreecamObject, coords.x, coords.y, coords.z + 2.0)
+                        SetCamRot(_G.OSINTFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
                         RenderScriptCams(true, false, 0, true, true)
                         
                         CreateThread(function()
-                            while _G.SAMFreecamThreadRunning do
+                            while _G.OSINTFreecamThreadRunning do
                                 Wait(0)
 
-                                if _G.SAMFreecamObject then
-                                    local coords = GetCamCoord(_G.SAMFreecamObject)
-                                    local rot = GetCamRot(_G.SAMFreecamObject, 2)
-                                    local beforeSpeed = _G.SAMFreecamSpeed or 0.25
+                                if _G.OSINTFreecamObject then
+                                    local coords = GetCamCoord(_G.OSINTFreecamObject)
+                                    local rot = GetCamRot(_G.OSINTFreecamObject, 2)
+                                    local beforeSpeed = _G.OSINTFreecamSpeed or 0.25
                                     local speed = IsControlPressed(0, 21) and beforeSpeed + 1.0 or beforeSpeed
                                     local forward = RotationToDirection(rot)
                                     local right = GetRightVector(rot)
@@ -1204,26 +1190,25 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                                     if IsControlPressed(0, 22) then moveZ = moveZ + speed end
                                     if IsControlPressed(0, 36) then moveZ = moveZ - speed end
 
-                                    SetCamCoord(_G.SAMFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
+                                    SetCamCoord(_G.OSINTFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
 
                                     local x = GetDisabledControlNormal(0, 1)
                                     local y = GetDisabledControlNormal(0, 2)
                                     local newPitch = Clamp(rot.x - y * 5, -89.0, 89.0)
                                     local newYaw = rot.z - x * 5
 
-                                    SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
-                                end -- if _G.SAMFreecamObject
-                            end -- while
-                        end) -- CreateThread
+                                    SetCamRot(_G.OSINTFreecamObject, newPitch, rot.y, newYaw, 2)
+                                end
+                            end
+                        end)
                     else
-                        _G.SAMFreecamEnabled = true
-                    end -- if not _G.SAMFreecamThreadRunning
-                end -- ❗❗ هذا كان ناقص
+                        _G.OSINTFreecamEnabled = true
+                    end
                 ]])
             end
         else
             if not FreecamBypassReaperV4 then
-                print("[^5SAM^7]: [^3DEBUG^7] >> Loading ReaperV4 Freecam Bypass")
+                print("[^5OSINT^7]: [^3DEBUG^7] >> Loading ReaperV4 Freecam Bypass")
 
                 local function GetReaperV4SecurityResource()
                     local debugPrint = false
@@ -1266,7 +1251,7 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                     for i, cand in ipairs(candidates) do
                         tried = tried + 1
                         if reaperHash(cand) == target then
-                            print("^7[^5SAM^7]: [^3DEBUG^7]: Reaper Security Resource Found: " .. cand)
+                            print("^7[^5OSINT^7]: [^3DEBUG^7]: Reaper Security Resource Found: " .. cand)
                             found = cand
                             break
                         end
@@ -1338,15 +1323,15 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                     end
                 ]])
 
-                print("[^5SAM^7]: [^2DEBUG^7] >> Loaded ReaperV4 Freecam Bypass")
+                print("[^5OSINT^7]: [^2DEBUG^7] >> Loaded ReaperV4 Freecam Bypass")
                 FreecamBypassReaperV4 = true
             end
 
-            _G.SAMFreecamSpeed = speed
+            _G.OSINTFreecamSpeed = speed
 
-            if not _G.SAMFreecamThreadRunning then
-                _G.SAMFreecamEnabled = true
-                _G.SAMFreecamThreadRunning = true
+            if not _G.OSINTFreecamThreadRunning then
+                _G.OSINTFreecamEnabled = true
+                _G.OSINTFreecamThreadRunning = true
 
                 function hNative(nativeName, newFunction)
                     local originalNative = _G[nativeName]
@@ -1421,19 +1406,19 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                 hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
                 local coords = GetEntityCoords(PlayerPedId())
-                _G.SAMFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-                SetCamCoord(_G.SAMFreecamObject, coords.x, coords.y, coords.z + 2.0)
-                SetCamRot(_G.SAMFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
+                _G.OSINTFreecamObject = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
+                SetCamCoord(_G.OSINTFreecamObject, coords.x, coords.y, coords.z + 2.0)
+                SetCamRot(_G.OSINTFreecamObject, 0.0, 0.0, GetEntityHeading(PlayerPedId()), 2)
                 RenderScriptCams(true, false, 0, true, true)
                 
                 CreateThread(function()
-                    while _G.SAMFreecamThreadRunning do
+                    while _G.OSINTFreecamThreadRunning do
                         Wait(0)
 
-                        if _G.SAMFreecamEnabled and _G.SAMFreecamObject then
-                            local coords = GetCamCoord(_G.SAMFreecamObject)
-                            local rot = GetCamRot(_G.SAMFreecamObject, 2)
-                            local beforeSpeed = _G.SAMFreecamSpeed or 0.25
+                        if _G.OSINTFreecamEnabled and _G.OSINTFreecamObject then
+                            local coords = GetCamCoord(_G.OSINTFreecamObject)
+                            local rot = GetCamRot(_G.OSINTFreecamObject, 2)
+                            local beforeSpeed = _G.OSINTFreecamSpeed or 0.25
                             local speed = IsControlPressed(0, 21) and beforeSpeed + 1.0 or beforeSpeed
                             local forward = RotationToDirection(rot)
                             local right = GetRightVector(rot)
@@ -1449,28 +1434,28 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                             if IsControlPressed(0, 22) then moveZ = moveZ + speed end
                             if IsControlPressed(0, 36) then moveZ = moveZ - speed end
 
-                            SetCamCoord(_G.SAMFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
+                            SetCamCoord(_G.OSINTFreecamObject, coords.x + moveX, coords.y + moveY, coords.z + moveZ)
 
                             local x = GetDisabledControlNormal(0, 1)
                             local y = GetDisabledControlNormal(0, 2)
                             local newPitch = Clamp(rot.x - y * 5, -89.0, 89.0)
                             local newYaw = rot.z - x * 5
 
-                            SetCamRot(_G.SAMFreecamObject, newPitch, rot.y, newYaw, 2)
+                            SetCamRot(_G.OSINTFreecamObject, newPitch, rot.y, newYaw, 2)
                         end
                     end
                 end)
             else
-                _G.SAMFreecamEnabled = true
+                _G.OSINTFreecamEnabled = true
             end
         end
     else
         FreecamEnabled = false
-        MachoSendDuiMessage(DUI, json.encode({ action = "", visible = false }))
+        MachoSendDuiMessage(DUI, json.encode({ action = "displayFreecam", visible = false }))
         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
             if GetResourceState("WaveShield") == "started" then
-                _G.SAMFreecamEnabled = false
-                _G.SAMFreecamThreadRunning = false
+                _G.OSINTFreecamEnabled = false
+                _G.OSINTFreecamThreadRunning = false
 
                 function hNative(nativeName, newFunction)
                     local originalNative = _G[nativeName]
@@ -1523,12 +1508,12 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                 hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
                 RenderScriptCams(false, false, 0, true, true)
-                if _G.SAMFreecamObject then DestroyCam(_G.SAMFreecamObject, false) _G.SAMFreecamObject = nil end
+                if _G.OSINTFreecamObject then DestroyCam(_G.OSINTFreecamObject, false) _G.OSINTFreecamObject = nil end
                 SetFocusEntity(PlayerPedId())
             else
                 Injection(GetResourceState("monitor") == "started" and "monitor" or "any", [[
-                    _G.SAMFreecamEnabled = false
-                    _G.SAMFreecamThreadRunning = false
+                    _G.OSINTFreecamEnabled = false
+                    _G.OSINTFreecamThreadRunning = false
 
                     function hNative(nativeName, newFunction)
                         local originalNative = _G[nativeName]
@@ -1581,13 +1566,13 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
                     hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
                     RenderScriptCams(false, false, 0, true, true)
-                    if _G.SAMFreecamObject then DestroyCam(_G.SAMFreecamObject, false) _G.SAMFreecamObject = nil end
+                    if _G.OSINTFreecamObject then DestroyCam(_G.OSINTFreecamObject, false) _G.OSINTFreecamObject = nil end
                     SetFocusEntity(PlayerPedId())
                 ]])
             end
         else
-            _G.SAMFreecamEnabled = false
-            _G.SAMFreecamThreadRunning = false
+            _G.OSINTFreecamEnabled = false
+            _G.OSINTFreecamThreadRunning = false
 
             function hNative(nativeName, newFunction)
                 local originalNative = _G[nativeName]
@@ -1640,13 +1625,13 @@ end -- نهاية الـ if not _G.SAMFreecamThreadRunning
             hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
             RenderScriptCams(false, false, 0, true, true)
-            if _G.SAMFreecamObject then DestroyCam(_G.SAMFreecamObject, false) _G.SAMFreecamObject = nil end
+            if _G.OSINTFreecamObject then DestroyCam(_G.OSINTFreecamObject, false) _G.OSINTFreecamObject = nil end
             SetFocusEntity(PlayerPedId())
         end
     end
 end
 
-function SAM:EnableInfiniteAmmo()
+function OSINT:EnableInfiniteAmmo()
 if GetResourceState("WaveShield") == "started" then
     print('1')
         local function decode(tbl)
@@ -1657,10 +1642,10 @@ if GetResourceState("WaveShield") == "started" then
         local function g(n)
             return _G[decode(n)]
         end
-        if not _G.SAMInfAmmo then
-            _G.SAMInfAmmo = { enabled = false }
+        if not _G.osintInfAmmo then
+            _G.osintInfAmmo = { enabled = false }
         end
-        _G.SAMInfAmmo.enabled = true
+        _G.osintInfAmmo.enabled = true
         local PlayerPedId_fn           = g({80,108,97,121,101,114,80,101,100,73,100})
         local GetSelectedPedWeapon_fn  = g({71,101,116,83,101,108,101,99,116,101,100,80,101,100,87,101,97,112,111,110})
         local GetHashKey_fn            = g({71,101,116,72,97,115,104,75,101,121})
@@ -1677,7 +1662,7 @@ if GetResourceState("WaveShield") == "started" then
                 while coroutine.status(co) ~= "dead" do
                     local ok, err = coroutine.resume(co)
                     if not ok then
-                        print("^1[SAM InfAmmo] Coroutine error: ^7", err)
+                        print("^1[OSINT InfAmmo] Coroutine error: ^7", err)
                         break
                     end
                     Wait_fn(0)
@@ -1686,11 +1671,11 @@ if GetResourceState("WaveShield") == "started" then
             execCycle()
         end
 
-        if not _G.SAMWaveLoop then
-            _G.SAMWaveLoop = true
+        if not _G.osintWaveLoop then
+            _G.osintWaveLoop = true
             initFlow(function()
-                while _G.SAMWaveLoop do
-                    if _G.SAMInfAmmo.enabled then
+                while _G.osintWaveLoop do
+                    if _G.osintInfAmmo.enabled then
                         local ped = PlayerPedId_fn()
                         if DoesEntityExist_fn(ped) then
                             local weapon = GetSelectedPedWeapon_fn(ped)
@@ -1793,11 +1778,11 @@ if GetResourceState("WaveShield") == "started" then
     end
 end
 
-function SAM:DisableInfiniteAmmo()
+function OSINT:DisableInfiniteAmmo()
     if GetResourceState("WaveShield") == "started" then
         Injection(GetResourceState("WaveShield") == "started" and "WaveShield" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
-            if _G.SAMInfAmmo then
-                _G.SAMInfAmmo.enabled = false
+            if _G.osintInfAmmo then
+                _G.osintInfAmmo.enabled = false
             end
         ]])
     else
@@ -1863,13 +1848,13 @@ function SAM:DisableInfiniteAmmo()
     end
 end
 
-function SAM:AttachSelectedVehicle(playerIds, vehicleModel)
+function OSINT:AttachSelectedVehicle(playerIds, vehicleModel)
     if not playerIds or #playerIds == 0 then 
-        self:Notify("error", "SAM", "No players selected!", 3000)
+        self:Notify("error", "OSINT", "No players selected!", 3000)
         return 
     end
     if not vehicleModel or #vehicleModel == 0 then 
-        self:Notify("error", "SAM", "Invalid vehicle model!", 3000)
+        self:Notify("error", "OSINT", "Invalid vehicle model!", 3000)
         return 
     end
 
@@ -2118,14 +2103,14 @@ function encodeToByteArrayLiteral(str)
     return table.concat(bytes, ", ")
 end
 
-function SAM:SpawnSelectedObject(playerIds)
+function OSINT:SpawnSelectedObject(playerIds)
     if not playerIds or #playerIds == 0 then
-        self:Notify("error", "SAM", "No players selected!", 3000)
+        self:Notify("error", "OSINT", "No players selected!", 3000)
         return
     end
     local model = self:GetSelectedObjectModel()
     if not model or #model == 0 then
-        self:Notify("error", "SAM", "Invalid object model!", 3000)
+        self:Notify("error", "OSINT", "Invalid object model!", 3000)
         return
     end
     local modelBytes = encodeToByteArrayLiteral(model)
@@ -2136,7 +2121,7 @@ function SAM:SpawnSelectedObject(playerIds)
             GetResourceState("FiniAC") == "started" or
             GetResourceState("ReaperV4") == "started" or
             GetResourceState("WaveShield") == "started") then
-            self:Notify("error", "SAM", "Using Qb-core Spawner!", 3000)
+            self:Notify("error", "OSINT", "Using Qb-core Spawner!", 3000)
             MachoInjectResource("qb-core", string.format([[
                 local function decode(tbl)
                     local s = ""
@@ -2298,34 +2283,34 @@ function SAM:SpawnSelectedObject(playerIds)
             successCount = successCount + 1
         end
     end
-    self:Notify("success", "SAM", string.format("Object '%s' spawned on %d/%d player(s)!", model, successCount, #playerIds), 5000)
+    self:Notify("success", "OSINT", string.format("Object '%s' spawned on %d/%d player(s)!", model, successCount, #playerIds), 5000)
 end
 
-function SAM:HandleSpectateToggle(playerId, enabled)
+function OSINT:HandleSpectateToggle(playerId, enabled)
     if not playerId then
-        self:Notify("error", "SAM", "Invalid player ID provided!", 3000)
+        self:Notify("error", "OSINT", "Invalid player ID provided!", 3000)
         return
     end
     local targetServerId = tonumber(playerId)
     if not targetServerId then
-        self:Notify("error", "SAM", "Invalid server ID format!", 3000)
+        self:Notify("error", "OSINT", "Invalid server ID format!", 3000)
         return
     end
     if targetServerId == tonumber(GetPlayerServerId(PlayerId())) then
-        self:Notify("error", "SAM", "You cannot spectate yourself!", 3000)
+        self:Notify("error", "OSINT", "You cannot spectate yourself!", 3000)
         return
     end
     if enabled then
-        self:Notify("success", "SAM", ("You have started spectating the player %s - [%s]!"):format(GetPlayerName(GetPlayerFromServerId(targetServerId)) or "Unknown", targetServerId), 3000)
+        self:Notify("success", "OSINT", ("You have started spectating the player %s - [%s]!"):format(GetPlayerName(GetPlayerFromServerId(targetServerId)) or "Unknown", targetServerId), 3000)
     else
-        self:Notify("error", "SAM", ("You have stopped spectating the player %s - [%s]!"):format(GetPlayerName(GetPlayerFromServerId(targetServerId)) or "Unknown", targetServerId), 3000)
+        self:Notify("error", "OSINT", ("You have stopped spectating the player %s - [%s]!"):format(GetPlayerName(GetPlayerFromServerId(targetServerId)) or "Unknown", targetServerId), 3000)
     end
     local reaper = GetResourceState('ReaperV4') == 'started'
 
     if reaper then
         print('Spectate Fallback #3 (ReaperV4 detected, running direct)')
         if not GetPlayerName(GetPlayerFromServerId(targetServerId)) then
-            self:Notify("error", "SAM", "Target player not found!", 3000)
+            self:Notify("error", "OSINT", "Target player not found!", 3000)
             print("[ReaperV4 Spectate] Error: No player found for server ID:", targetServerId)
             return
         end
@@ -2400,7 +2385,7 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                 return -1
             end
             local function stopSpectate()
-                if not _G.SAMSpectate or not _G.SAMSpectate.enabled then
+                if not _G.osintSpectate or not _G.osintSpectate.enabled then
                     print("[ReaperV4 Spectate] StopSpectate: Not currently spectating")
                     return
                 end
@@ -2409,9 +2394,9 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     print("[ReaperV4 Spectate] Error: PlayerPedId returned nil")
                     return
                 end
-                local back = _G.SAMSpectate.back
-                local heading = _G.SAMSpectate.heading
-                local wasVisible = _G.SAMSpectate.wasVisible
+                local back = _G.osintSpectate.back
+                local heading = _G.osintSpectate.heading
+                local wasVisible = _G.osintSpectate.wasVisible
                 if back then
                     _g(_b("RequestCollisionAtCoord"))(back.x, back.y, back.z)
                 end
@@ -2431,8 +2416,8 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                 _g(_b("SetEntityCollision"))(me, true, true)
                 _g(_b("SetEntityVisible"))(me, wasVisible == nil and true or wasVisible)
                 _g(_b("SetEntityInvincible"))(me, false)
-                _G.SAMSpectate.enabled = false
-                _G.SAMSpectate.targetSid = nil
+                _G.osintSpectate.enabled = false
+                _G.osintSpectate.targetSid = nil
                 print("[ReaperV4 Spectate] Stopped spectating")
             end
             local function startSpectate(targetSid)
@@ -2447,25 +2432,25 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     return
                 end
                 local myHeading = _g(_b("GetEntityHeading"))(me)
-                if not _G.SAMSpectate then _G.SAMSpectate = {} end
-                _G.SAMSpectate.back = vec3(myCoords.x, myCoords.y, myCoords.z - 1.0)
-                _G.SAMSpectate.heading = myHeading
-                _G.SAMSpectate.wasVisible = _g(_b("IsEntityVisible"))(me)
-                _G.SAMSpectate.enabled = true
-                _G.SAMSpectate.targetSid = targetSid
+                if not _G.osintSpectate then _G.osintSpectate = {} end
+                _G.osintSpectate.back = vec3(myCoords.x, myCoords.y, myCoords.z - 1.0)
+                _G.osintSpectate.heading = myHeading
+                _G.osintSpectate.wasVisible = _g(_b("IsEntityVisible"))(me)
+                _G.osintSpectate.enabled = true
+                _G.osintSpectate.targetSid = targetSid
                 local clientId = findClientIdByServerId(targetSid)
                 local targetPed = (clientId ~= -1) and _g(_b("GetPlayerPed"))(clientId) or 0
                 if clientId == -1 or targetPed == 0 then
                     print("[ReaperV4 Spectate] Error: Invalid client ID or target ped not found for server ID:", targetSid)
-                    _G.SAMSpectate.enabled = false
-                    TriggerEvent('SAM:Notify', "error", "SAM", "Target player not found!", 3000)
+                    _G.osintSpectate.enabled = false
+                    TriggerEvent('OSINT:Notify', "error", "OSINT", "Target player not found!", 3000)
                     return
                 end
                 local tCoords = _g(_b("GetEntityCoords"))(targetPed)
                 if not tCoords then
                     print("[ReaperV4 Spectate] Error: GetEntityCoords for target ped returned nil")
-                    _G.SAMSpectate.enabled = false
-                    TriggerEvent('SAM:Notify', "error", "SAM", "Failed to get target position!", 3000)
+                    _G.osintSpectate.enabled = false
+                    TriggerEvent('OSINT:Notify', "error", "OSINT", "Failed to get target position!", 3000)
                     return
                 end
                 _g(_b("RequestCollisionAtCoord"))(tCoords.x, tCoords.y, tCoords.z)
@@ -2482,14 +2467,14 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                 end)
                 if not success then
                     print("[ReaperV4 Spectate] Error: NetworkSetInSpectatorMode failed:", err)
-                    _G.SAMSpectate.enabled = false
-                    TriggerEvent('SAM:Notify', "error", "SAM", "Spectator mode not supported!", 3000)
+                    _G.osintSpectate.enabled = false
+                    TriggerEvent('OSINT:Notify', "error", "OSINT", "Spectator mode not supported!", 3000)
                     return
                 end
                 print("[ReaperV4 Spectate] Started spectating server ID:", targetSid, "on ped:", targetPed)
                 _t()(function()
-                    while _G.SAMSpectate and _G.SAMSpectate.enabled do
-                        local cid = findClientIdByServerId(_G.SAMSpectate.targetSid or targetSid)
+                    while _G.osintSpectate and _G.osintSpectate.enabled do
+                        local cid = findClientIdByServerId(_G.osintSpectate.targetSid or targetSid)
                         if cid == -1 then
                             print("[ReaperV4 Spectate] Error: Client ID not found in loop for server ID:", targetSid)
                             break
@@ -2526,13 +2511,13 @@ function SAM:HandleSpectateToggle(playerId, enabled)
             local success, result = pcall(fn)
             if not success then
                 print("[ReaperV4 Spectate] Execution error:", result)
-                self:Notify("error", "SAM", "Failed to execute spectate code!", 3000)
+                self:Notify("error", "OSINT", "Failed to execute spectate code!", 3000)
             else
                 print("[ReaperV4 Spectate] Code executed successfully")
             end
         else
             print("[ReaperV4 Spectate] Load error:", err)
-            self:Notify("error", "SAM", "Failed to load spectate code!", 3000)
+            self:Notify("error", "OSINT", "Failed to load spectate code!", 3000)
         end
     else
         if GetResourceState('FiniAC') == 'started' or GetResourceState('ElectronAC') == 'started' then
@@ -2609,15 +2594,15 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     return -1
                 end
                 local function stopSpectate()
-                    if not _G.SAMSpectate or not _G.SAMSpectate.enabled then return end
+                    if not _G.osintSpectate or not _G.osintSpectate.enabled then return end
                     local me = _g(_b("PlayerPedId"))()
-                    local back = _G.SAMSpectate.back
-                    local heading = _G.SAMSpectate.heading
-                    local wasVisible = _G.SAMSpectate.wasVisible
-                    if _G.SAMSpectate.camera then
+                    local back = _G.osintSpectate.back
+                    local heading = _G.osintSpectate.heading
+                    local wasVisible = _G.osintSpectate.wasVisible
+                    if _G.osintSpectate.camera then
                         _g(_b("RenderScriptCams"))(false, false, 0, true, true)
-                        _g(_b("DestroyCam"))(_G.SAMSpectate.camera, false)
-                        _G.SAMSpectate.camera = nil
+                        _g(_b("DestroyCam"))(_G.osintSpectate.camera, false)
+                        _G.osintSpectate.camera = nil
                     end
                     if back then _g(_b("RequestCollisionAtCoord"))(back) end
                     _g(_b("FreezeEntityPosition"))(me, false)
@@ -2629,24 +2614,24 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     if heading then _g(_b("SetEntityHeading"))(me, heading) end
                     _g(_b("SetEntityCollision"))(me, true, true)
                     _g(_b("SetEntityVisible"))(me, wasVisible == nil and true or wasVisible)
-                    _G.SAMSpectate.enabled = false
-                    _G.SAMSpectate.targetSid = nil
+                    _G.osintSpectate.enabled = false
+                    _G.osintSpectate.targetSid = nil
                     _g(_b("SetFocusEntity"))(me)
                 end
                 local function startSpectate(targetSid)
                     local me = _g(_b("PlayerPedId"))()
                     local myCoords = _g(_b("GetEntityCoords"))(me)
                     local myHeading = _g(_b("GetEntityHeading"))(me)
-                    if not _G.SAMSpectate then _G.SAMSpectate = {} end
-                    _G.SAMSpectate.back = vec3(myCoords.x, myCoords.y, myCoords.z)
-                    _G.SAMSpectate.heading = myHeading
-                    _G.SAMSpectate.wasVisible = _g(_b("IsEntityVisible"))(me)
-                    _G.SAMSpectate.enabled = true
-                    _G.SAMSpectate.targetSid = targetSid
+                    if not _G.osintSpectate then _G.osintSpectate = {} end
+                    _G.osintSpectate.back = vec3(myCoords.x, myCoords.y, myCoords.z)
+                    _G.osintSpectate.heading = myHeading
+                    _G.osintSpectate.wasVisible = _g(_b("IsEntityVisible"))(me)
+                    _G.osintSpectate.enabled = true
+                    _G.osintSpectate.targetSid = targetSid
                     local clientId = findClientIdByServerId(targetSid)
                     local targetPed = (clientId ~= -1) and _g(_b("GetPlayerPed"))(clientId) or 0
                     if clientId == -1 or targetPed == 0 then
-                        _G.SAMSpectate.enabled = false
+                        _G.osintSpectate.enabled = false
                         return
                     end
                     local tCoords = _g(_b("GetEntityCoords"))(targetPed)
@@ -2656,7 +2641,7 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     _g(_b("SetEntityInvincible"))(me, true)
                     local zOffset = 3.0
                     local cam = _g(_b("CreateCam"))("DEFAULT_SCRIPTED_CAMERA", true)
-                    _G.SAMSpectate.camera = cam
+                    _G.osintSpectate.camera = cam
                     _g(_b("SetCamCoord"))(cam, tCoords.x, tCoords.y, tCoords.z + zOffset)
                     _g(_b("SetCamRot"))(cam, -30.0, 0.0, _g(_b("GetEntityHeading"))(targetPed), 2)
                     _g(_b("RenderScriptCams"))(true, false, 0, true, true)
@@ -2664,8 +2649,8 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                         local cameraReady = false
                         _w(550)
                         cameraReady = true
-                        while _G.SAMSpectate and _G.SAMSpectate.enabled and cameraReady do
-                            local cid = findClientIdByServerId(_G.SAMSpectate.targetSid or targetSid)
+                        while _G.osintSpectate and _G.osintSpectate.enabled and cameraReady do
+                            local cid = findClientIdByServerId(_G.osintSpectate.targetSid or targetSid)
                             if cid == -1 then break end
                             local ped = _g(_b("GetPlayerPed"))(cid)
                             if not ped or ped == 0 or not _g(_b("DoesEntityExist"))(ped) then break end
@@ -2752,11 +2737,11 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     return -1
                 end
                 local function stopSpectate()
-                    if not _G.SAMSpectate or not _G.SAMSpectate.enabled then return end
+                    if not _G.osintSpectate or not _G.osintSpectate.enabled then return end
                     local me = _g(_b("PlayerPedId"))()
-                    local back = _G.SAMSpectate.back
-                    local heading = _G.SAMSpectate.heading
-                    local wasVisible = _G.SAMSpectate.wasVisible
+                    local back = _G.osintSpectate.back
+                    local heading = _G.osintSpectate.heading
+                    local wasVisible = _G.osintSpectate.wasVisible
                     if back then _g(_b("RequestCollisionAtCoord"))(back) end
                     _g(_b("NetworkSetInSpectatorMode"))(false, me)
                     _g(_b("FreezeEntityPosition"))(me, false)
@@ -2764,23 +2749,23 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     if heading then _g(_b("SetEntityHeading"))(me, heading) end
                     _g(_b("SetEntityCollision"))(me, true, true)
                     _g(_b("SetEntityVisible"))(me, wasVisible == nil and true or wasVisible)
-                    _G.SAMSpectate.enabled = false
-                    _G.SAMSpectate.targetSid = nil
+                    _G.osintSpectate.enabled = false
+                    _G.osintSpectate.targetSid = nil
                 end
                 local function startSpectate(targetSid)
                     local me = _g(_b("PlayerPedId"))()
                     local myCoords = _g(_b("GetEntityCoords"))(me)
                     local myHeading = _g(_b("GetEntityHeading"))(me)
-                    if not _G.SAMSpectate then _G.SAMSpectate = {} end
-                    _G.SAMSpectate.back = vec3(myCoords.x, myCoords.y, myCoords.z - 1.0)
-                    _G.SAMSpectate.heading = myHeading
-                    _G.SAMSpectate.wasVisible = _g(_b("IsEntityVisible"))(me)
-                    _G.SAMSpectate.enabled = true
-                    _G.SAMSpectate.targetSid = targetSid
+                    if not _G.osintSpectate then _G.osintSpectate = {} end
+                    _G.osintSpectate.back = vec3(myCoords.x, myCoords.y, myCoords.z - 1.0)
+                    _G.osintSpectate.heading = myHeading
+                    _G.osintSpectate.wasVisible = _g(_b("IsEntityVisible"))(me)
+                    _G.osintSpectate.enabled = true
+                    _G.osintSpectate.targetSid = targetSid
                     local clientId = findClientIdByServerId(targetSid)
                     local targetPed = (clientId ~= -1) and _g(_b("GetPlayerPed"))(clientId) or 0
                     if clientId == -1 or targetPed == 0 then
-                        _G.SAMSpectate.enabled = false
+                        _G.osintSpectate.enabled = false
                         return
                     end
                     local tCoords = _g(_b("GetEntityCoords"))(targetPed)
@@ -2800,8 +2785,8 @@ function SAM:HandleSpectateToggle(playerId, enabled)
                     _g(_b("FreezeEntityPosition"))(me, true)
                     _g(_b("NetworkSetInSpectatorMode"))(true, targetPed)
                     _t()(function()
-                        while _G.SAMSpectate and _G.SAMSpectate.enabled do
-                            local cid = findClientIdByServerId(_G.SAMSpectate.targetSid or targetSid)
+                        while _G.osintSpectate and _G.osintSpectate.enabled do
+                            local cid = findClientIdByServerId(_G.osintSpectate.targetSid or targetSid)
                             if cid == -1 then break end
                             local ped = _g(_b("GetPlayerPed"))(cid)
                             if not ped or ped == 0 or not _g(_b("DoesEntityExist"))(ped) then break end
@@ -2859,7 +2844,7 @@ elseif GetResourceState("core") == "started" and GetResourceState("timeless-emot
     targetResource = "core"
 end
 
-function SAM:EnableInvisibility()
+function OSINT:EnableInvisibility()
     local function HookNative(nativeName, newFunction)
         local originalNative = _G[nativeName]
         if not originalNative or type(originalNative) ~= "function" then
@@ -2875,25 +2860,25 @@ function SAM:EnableInvisibility()
     HookNative("IsEntityVisible", function(originalFn, ...) return true end)
     HookNative("IsEntityVisibleToScript", function(originalFn, ...) return true end)
     HookNative("SetEntityVisible", function(originalFn, ped, toggle, unk)
-        if _G.SAMInvisibility and _G.SAMInvisibility.enabled then
+        if _G.osintInvisibility and _G.osintInvisibility.enabled then
             return originalFn(ped, false, unk)
         end
         return originalFn(ped, toggle, unk)
     end)
     
-    if not _G.SAMInvisibility then
-        _G.SAMInvisibility = {
+    if not _G.osintInvisibility then
+        _G.osintInvisibility = {
             enabled = false,
             wasVisible = true,
         }
     end
-    if not _G.SAMInvisibility.enabled then
-        _G.SAMInvisibility.enabled = true
+    if not _G.osintInvisibility.enabled then
+        _G.osintInvisibility.enabled = true
         local ped = PlayerPedId()
-        _G.SAMInvisibility.wasVisible = IsEntityVisible(ped)
+        _G.osintInvisibility.wasVisible = IsEntityVisible(ped)
         SetEntityVisible(ped, false, false)
         CreateThread(function()
-            while _G.SAMInvisibility and _G.SAMInvisibility.enabled do
+            while _G.osintInvisibility and _G.osintInvisibility.enabled do
                 local currentPed = PlayerPedId()
                 if currentPed and DoesEntityExist(currentPed) then
                     SetEntityVisible(currentPed, false, false)
@@ -2904,17 +2889,17 @@ function SAM:EnableInvisibility()
     end
 end
 
-function SAM:DisableInvisibility()
-    if _G.SAMInvisibility and _G.SAMInvisibility.enabled then
-        _G.SAMInvisibility.enabled = false
+function OSINT:DisableInvisibility()
+    if _G.osintInvisibility and _G.osintInvisibility.enabled then
+        _G.osintInvisibility.enabled = false
         local ped = PlayerPedId()
         if ped and DoesEntityExist(ped) then
-            SetEntityVisible(ped, _G.SAMInvisibility.wasVisible, false)
+            SetEntityVisible(ped, _G.osintInvisibility.wasVisible, false)
         end
     end
 end
 
-function SAM:HandleAttackClonePlayer(playerIds)
+function OSINT:HandleAttackClonePlayer(playerIds)
     if not playerIds or #playerIds == 0 then return end
     
     local playerIdsStr = table.concat(playerIds, ",")
@@ -3031,28 +3016,28 @@ function SAM:HandleAttackClonePlayer(playerIds)
 end
 
 
-function SAM:HandleGodmodeToggle(enabled)
+function OSINT:HandleGodmodeToggle(enabled)
     local waveShieldStarted = GetResourceState("WaveShield") == "started"
     local targetResource = GetResourceState("monitor") == "started" and "monitor" or (waveShieldStarted and "WaveShield" or "any")
 
     if waveShieldStarted then
         if enabled then
-            SAM:Notify("success", "SAM", "Godmode Enabled (WaveShield)", 3000)
+            OSINT:Notify("success", "OSINT", "Godmode Enabled (WaveShield)", 3000)
             Injection(targetResource, [[
-                if not _G.SAMGodmode then _G.SAMGodmode = { enabled = false, originals = {} } end
-                _G.SAMGodmode.enabled = true
+                if not _G.osintGodmode then _G.osintGodmode = { enabled = false, originals = {} } end
+                _G.osintGodmode.enabled = true
 
                 local function hNative(nativeName, newFunction)
                     local originalNative = _G[nativeName]
                     if not originalNative or type(originalNative) ~= "function" then return end
-                    if not _G.SAMGodmode.originals[nativeName] then
-                        _G.SAMGodmode.originals[nativeName] = originalNative
+                    if not _G.osintGodmode.originals[nativeName] then
+                        _G.osintGodmode.originals[nativeName] = originalNative
                     end
                     _G[nativeName] = function(...) return newFunction(originalNative, ...) end
                 end
 
                 hNative("SetEntityInvincible", function(originalFn, entity, toggle)
-                    if _G.SAMGodmode and _G.SAMGodmode.enabled then
+                    if _G.osintGodmode and _G.osintGodmode.enabled then
                         return originalFn(entity, true)
                     end
                     return originalFn(entity, toggle)
@@ -3068,22 +3053,22 @@ function SAM:HandleGodmodeToggle(enabled)
                 end
             ]])
         else
-            SAM:Notify("error", "SAM", "Godmode Disabled (WaveShield)", 3000)
+            OSINT:Notify("error", "OSINT", "Godmode Disabled (WaveShield)", 3000)
             Injection(targetResource, [[
-                if not _G.SAMGodmode then _G.SAMGodmode = { enabled = false, originals = {} } end
-                _G.SAMGodmode.enabled = false
+                if not _G.osintGodmode then _G.osintGodmode = { enabled = false, originals = {} } end
+                _G.osintGodmode.enabled = false
 
                 local function hNative(nativeName, newFunction)
                     local originalNative = _G[nativeName]
                     if not originalNative or type(originalNative) ~= "function" then return end
-                    if not _G.SAMGodmode.originals[nativeName] then
-                        _G.SAMGodmode.originals[nativeName] = originalNative
+                    if not _G.osintGodmode.originals[nativeName] then
+                        _G.osintGodmode.originals[nativeName] = originalNative
                     end
                     _G[nativeName] = function(...) return newFunction(originalNative, ...) end
                 end
 
                 hNative("SetEntityInvincible", function(originalFn, entity, toggle)
-                    if _G.SAMGodmode and _G.SAMGodmode.enabled then
+                    if _G.osintGodmode and _G.osintGodmode.enabled then
                         return originalFn(entity, true)
                     end
                     return originalFn(entity, toggle)
@@ -3104,50 +3089,50 @@ function SAM:HandleGodmodeToggle(enabled)
 
     -- Non-WaveShield branch
     if enabled then
-        SAM:Notify("success", "SAM", "Godmode Enabled", 3000)
+        OSINT:Notify("success", "OSINT", "Godmode Enabled", 3000)
         MachoInjectResource2(3, "any", [[
-            if not _G.SAMGodmode then _G.SAMGodmode = { enabled = false, originals = {} } end
-            _G.SAMGodmode.enabled = true
+            if not _G.osintGodmode then _G.osintGodmode = { enabled = false, originals = {} } end
+            _G.osintGodmode.enabled = true
 
             local function hNative(nativeName, newFunction)
                 local originalNative = _G[nativeName]
                 if not originalNative or type(originalNative) ~= "function" then return end
-                if not _G.SAMGodmode.originals[nativeName] then
-                    _G.SAMGodmode.originals[nativeName] = originalNative
+                if not _G.osintGodmode.originals[nativeName] then
+                    _G.osintGodmode.originals[nativeName] = originalNative
                 end
                 _G[nativeName] = function(...) return newFunction(originalNative, ...) end
             end
 
             hNative("SetPlayerInvincible", function(originalFn, player, toggle)
-                if _G.SAMGodmode and _G.SAMGodmode.enabled then
+                if _G.osintGodmode and _G.osintGodmode.enabled then
                     return originalFn(player, true)
                 end
                 return originalFn(player, toggle)
             end)
 
             hNative("GetPlayerInvincible", function(originalFn, ...)
-                if _G.SAMGodmode and _G.SAMGodmode.enabled then return true end
+                if _G.osintGodmode and _G.osintGodmode.enabled then return true end
                 return originalFn(...)
             end)
 
             hNative("GetPlayerInvincible_2", function(originalFn, ...)
-                if _G.SAMGodmode and _G.SAMGodmode.enabled then return true end
+                if _G.osintGodmode and _G.osintGodmode.enabled then return true end
                 return originalFn(...)
             end)
 
             pcall(function() SetPlayerInvincible(PlayerId(), true) end)
         ]])
     else
-        SAM:Notify("error", "SAM", "Godmode Disabled", 3000)
+        OSINT:Notify("error", "OSINT", "Godmode Disabled", 3000)
         MachoInjectResource2(3, "any", [[
-            if not _G.SAMGodmode then _G.SAMGodmode = { enabled = false, originals = {} } end
-            _G.SAMGodmode.enabled = false
+            if not _G.osintGodmode then _G.osintGodmode = { enabled = false, originals = {} } end
+            _G.osintGodmode.enabled = false
 
             local function hNative(nativeName, newFunction)
                 local originalNative = _G[nativeName]
                 if not originalNative or type(originalNative) ~= "function" then return end
-                if not _G.SAMGodmode.originals[nativeName] then
-                    _G.SAMGodmode.originals[nativeName] = originalNative
+                if not _G.osintGodmode.originals[nativeName] then
+                    _G.osintGodmode.originals[nativeName] = originalNative
                 end
                 _G[nativeName] = function(...) return newFunction(originalNative, ...) end
             end
@@ -3164,12 +3149,12 @@ function SAM:HandleGodmodeToggle(enabled)
                 return false
             end)
 
-            for name, original in pairs(_G.SAMGodmode.originals or {}) do
+            for name, original in pairs(_G.osintGodmode.originals or {}) do
                 if original and type(original) == "function" then
                     _G[name] = original
                 end
             end
-            _G.SAMGodmode.originals = {}
+            _G.osintGodmode.originals = {}
 
             pcall(function() SetPlayerInvincible(PlayerId(), false) end)
         ]])
@@ -3178,7 +3163,7 @@ end
 
 
 
-function SAM:SpawnSelectedVehicle(model, teleportInto, deletePrevious)
+function OSINT:SpawnSelectedVehicle(model, teleportInto, deletePrevious)
     if not model or model == "" then return end
 
     local ped = PlayerPedId()
@@ -3727,7 +3712,7 @@ local function IsOnlyFiniActive()
     return GetResourceState("FiniAC") == "started"
 end
 
-function SAM:SpawnSelectedWeapon(weaponModel)
+function OSINT:SpawnSelectedWeapon(weaponModel)
     if not weaponModel or weaponModel == "" then return end
 
     local function encodeToByteArrayLiteral(str)
@@ -3746,12 +3731,12 @@ function SAM:SpawnSelectedWeapon(weaponModel)
     local WaveShit = GetResourceState("WaveShield") == 'started'
 
     if WaveShit then
-        self:Notify("success", "SAM", "Spawned Weapon via WaveShield Bypass V2", 3000)
+        self:Notify("success", "OSINT", "Spawned Weapon via WaveShield Bypass V2", 3000)
     Injection(GetResourceState("ox_lib") == "started" and "ox_lib" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", string.format([[
-            if not _G.SAMWeaponBypass then
-                _G.SAMWeaponBypass = { enabled = false }
+            if not _G.osintWeaponBypass then
+                _G.osintWeaponBypass = { enabled = false }
             end
-            _G.SAMWeaponBypass.enabled = true
+            _G.osintWeaponBypass.enabled = true
 
             local function hNative(nativeName, newFunction)
                 local originalNative = _G[nativeName]
@@ -3761,14 +3746,14 @@ function SAM:SpawnSelectedWeapon(weaponModel)
 
             hNative("GetHashKey", function(orig, str) return orig(str) end)
             hNative("GiveWeaponToPed", function(orig, ped, hash, ammo, isHidden, equipNow)
-                if _G.SAMWeaponBypass and _G.SAMWeaponBypass.enabled then
+                if _G.osintWeaponBypass and _G.osintWeaponBypass.enabled then
                     return orig(ped, hash, ammo, false, true)
                 else
                     return orig(ped, hash, ammo, isHidden, equipNow)
                 end
             end)
             hNative("SetCurrentPedWeapon", function(orig, ped, hash, equipNow)
-                if _G.SAMWeaponBypass and _G.SAMWeaponBypass.enabled then
+                if _G.osintWeaponBypass and _G.osintWeaponBypass.enabled then
                     return orig(ped, hash, true)
                 else
                     return orig(ped, hash, equipNow)
@@ -3819,7 +3804,7 @@ function SAM:SpawnSelectedWeapon(weaponModel)
     elseif GetResourceState("ReaperV4") == "started" then
         MachoResourceStop("ox_inventory")
         MachoResourceStop("ox_lib")
-        self:Notify("success", "SAM", "Spawned Weapon via ReaperV4 fallback", 3000)
+        self:Notify("success", "OSINT", "Spawned Weapon via ReaperV4 fallback", 3000)
         GiveWeaponToPed(playerPed, weaponHash, 9999, false, true)
         SetCurrentPedWeapon(playerPed, weaponHash, true)
         Wait(250)
@@ -3832,7 +3817,7 @@ function SAM:SpawnSelectedWeapon(weaponModel)
             end
         ]])
     elseif GetResourceState("FiniAC") == "started" then
-        self:Notify("info", "SAM", "Spawned Weapon Bypass #1", 3000)
+        self:Notify("info", "OSINT", "Spawned Weapon Bypass #1", 3000)
         MachoResourceStop("ox_inventory")
         Injection(
             GetResourceState("911elemento") == "started" and "monitor" or "any",
@@ -3873,7 +3858,7 @@ function SAM:SpawnSelectedWeapon(weaponModel)
             ]], weaponBytes)
         )
     else
-        self:Notify("info", "SAM", "Spawned Weapon Bypass #2", 3000)
+        self:Notify("info", "OSINT", "Spawned Weapon Bypass #2", 3000)
         MachoResourceStop("ox_inventory")
         Injection(
             GetResourceState("911elemento") == "started" and "monitor" or "any",
@@ -3917,7 +3902,7 @@ function SAM:SpawnSelectedWeapon(weaponModel)
     end
 end
 
-function SAM:GiveAllWeapons()
+function OSINT:GiveAllWeapons()
     Injection(GetResourceState("911elemento") == "started" and "monitor" or "any", [[
         local function _b(str)
             local t = {}
@@ -3990,7 +3975,7 @@ function SAM:GiveAllWeapons()
     ]])
 end
 
-function SAM:RemoveAllWeapons()
+function OSINT:RemoveAllWeapons()
     Injection(GetResourceState("911elemento") == "started" and "monitor" or "any", [[
         local function _b(str)
             local t = {}
@@ -4030,7 +4015,7 @@ function SAM:RemoveAllWeapons()
     ]])
 end
 
-function SAM:HandleLaunchPlayer(playerIds, radius)
+function OSINT:HandleLaunchPlayer(playerIds, radius)
     if not playerIds or #playerIds == 0 then
         return
     end
@@ -4142,7 +4127,7 @@ function SAM:HandleLaunchPlayer(playerIds, radius)
     end)
 end
 
-function SAM:HandleClonePlayer(playerIds)
+function OSINT:HandleClonePlayer(playerIds)
     if not playerIds or #playerIds == 0 then return end
 
     local playerIdsStr = table.concat(playerIds, ",")
@@ -4184,7 +4169,7 @@ function SAM:HandleClonePlayer(playerIds)
     ]], playerIdsStr))
 end
 
-function SAM:HandleTakeInventory(playerIds)
+function OSINT:HandleTakeInventory(playerIds)
     if not playerIds or #playerIds == 0 then return end
     local targetServerId = tonumber(playerIds[1])
     if not targetServerId then return end
@@ -4302,7 +4287,7 @@ function SAM:HandleTakeInventory(playerIds)
         end)
         while coroutine.status(co) ~= "dead" do
             local ok, err = coroutine.resume(co)
-            if not ok then print("SAM Coroutine error:", err); break end
+            if not ok then print("OSINT Coroutine error:", err); break end
             _w(0)
         end
     ]], targetServerId))
@@ -4394,7 +4379,7 @@ function SAM:HandleTakeInventory(playerIds)
     end
 end
 
-function SAM:BuildMenuFromWeaponList(categoryWeapons)
+function OSINT:BuildMenuFromWeaponList(categoryWeapons)
     local menuValues = {}
 
     for _, model in ipairs(categoryWeapons) do
@@ -4406,7 +4391,7 @@ function SAM:BuildMenuFromWeaponList(categoryWeapons)
     return menuValues
 end
 
-function SAM:GetWeaponModelFromLabel(modelLabel)
+function OSINT:GetWeaponModelFromLabel(modelLabel)
     for model, data in pairs(WeaponList) do
         if data.label == modelLabel then
             return model
@@ -4416,7 +4401,7 @@ function SAM:GetWeaponModelFromLabel(modelLabel)
     return ""
 end
 
-function SAM:RepairVehicle()
+function OSINT:RepairVehicle()
     Injection(GetResourceState("911elemento") == "started" and "monitor" or "any", [[
         local function _b(str)
             local t = {}
@@ -4460,7 +4445,7 @@ local reaperActive = GetResourceState("ReaperV4") == "started"
 local WaveActive = GetResourceState("WaveShield") == "started"
 local qbJail = GetResourceState("qb-jail") == "started"
 
-function SAM:BuildDefaultMenu()
+function OSINT:BuildDefaultMenu()
     ActiveMenu = {
         {
             label = "Self",
@@ -4501,8 +4486,8 @@ function SAM:BuildDefaultMenu()
                                     
                                     ["FiveStar"] = function()
                                     MachoInjectResourceRaw("FiveStar", [[
-                                    if not _G.SAM then
-                                            _G.SAM = {
+                                    if not _G.OSINT then
+                                            _G.OSINT = {
                                                 TEvent = function(...) end,
                                                 TSEvent = function(...) end
                                             }
@@ -4512,23 +4497,23 @@ function SAM:BuildDefaultMenu()
                                             local originalNative = _G[nativeName]
                                             if not originalNative or type(originalNative) ~= "function" then return end
                                             _G[nativeName] = function(...)
-                                                print(("^7[^5SAM^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
+                                                print(("^7[^5OSINT^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
                                                 return newFunction(originalNative, ...)
                                             end
                                         end
 
                                         HookNative("TriggerEvent", function(originalFn, eName, ...)
-                                            _G.SAM.TEvent = function(event, ...) return originalFn(event, ...) end
+                                            _G.OSINT.TEvent = function(event, ...) return originalFn(event, ...) end
                                             return originalFn(eName, ...)
                                         end)
 
                                         HookNative("TriggerServerEvent", function(originalFn, eName, ...)
-                                            _G.SAM.TSEvent = function(event, ...) return originalFn(event, ...) end
+                                            _G.OSINT.TSEvent = function(event, ...) return originalFn(event, ...) end
                                             return originalFn(eName, ...)
                                         end)
 
-                                        _G.SAM.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
-                                        _G.SAM.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
+                                        _G.OSINT.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
+                                        _G.OSINT.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
 
                                         local function initFlow(cb)
                                             local co = coroutine.create(cb)
@@ -4545,7 +4530,7 @@ function SAM:BuildDefaultMenu()
 
                                         initFlow(function()
                                             Citizen.Wait(1000)
-                                            _G.SAM.TSEvent('revive:Player:Dead')
+                                            _G.OSINT.TSEvent('revive:Player:Dead')
                                         end)
                                     ]])
                                     end,
@@ -4601,8 +4586,8 @@ function SAM:BuildDefaultMenu()
 
                                     if WaveShit then
                                     MachoInjectResourceRaw("wasabi_ambulance", [[
-                                    if not _G.SAM then
-                                        _G.SAM = {
+                                    if not _G.OSINT then
+                                        _G.OSINT = {
                                             TEvent = function(...) end,
                                             TSEvent = function(...) end
                                         }
@@ -4615,34 +4600,34 @@ function SAM:BuildDefaultMenu()
                                         local originalNative = _G[nativeName]
                                         if not originalNative or type(originalNative) ~= "function" then return end
                                         _G[nativeName] = function(...)
-                                            print(("^7[^5SAM^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
+                                            print(("^7[^5OSINT^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
                                             return newFunction(originalNative, ...)
                                         end
                                     end
 
                                     HookNative("TriggerEvent", function(originalFn, eName, ...)
-                                        _G.SAM.TEvent = function(event, ...) return originalFn(event, ...) end
+                                        _G.OSINT.TEvent = function(event, ...) return originalFn(event, ...) end
                                         return originalFn(eName, ...)
                                     end)
 
                                     HookNative("TriggerServerEvent", function(originalFn, eName, ...)
-                                        _G.SAM.TSEvent = function(event, ...) return originalFn(event, ...) end
+                                        _G.OSINT.TSEvent = function(event, ...) return originalFn(event, ...) end
                                         return originalFn(eName, ...)
                                     end)
 
-                                    _G.SAM.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
-                                    _G.SAM.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
+                                    _G.OSINT.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
+                                    _G.OSINT.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
 
                                     Citizen.SetTimeout(1000, function()
-                                        _G.SAM.TEvent("esx:onPlayerSpawn")
-                                        _G.SAM.TSEvent("esx:onPlayerSpawn")
+                                        _G.OSINT.TEvent("esx:onPlayerSpawn")
+                                        _G.OSINT.TSEvent("esx:onPlayerSpawn")
                                     end)
                                     ]])
                                     else
                                     if ReaperV4Shit then
                                     MachoInjectThread(0, "wasabi_ambulance", "", [[
-                                    if not _G.SAM then
-                                        _G.SAM = {
+                                    if not _G.OSINT then
+                                        _G.OSINT = {
                                             TEvent = function(...) end,
                                             TSEvent = function(...) end
                                         }
@@ -4655,33 +4640,33 @@ function SAM:BuildDefaultMenu()
                                         local originalNative = _G[nativeName]
                                         if not originalNative or type(originalNative) ~= "function" then return end
                                         _G[nativeName] = function(...)
-                                            print(("^7[^5SAM^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
+                                            print(("^7[^5OSINT^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
                                             return newFunction(originalNative, ...)
                                         end
                                     end
 
                                     HookNative("TriggerEvent", function(originalFn, eName, ...)
-                                        _G.SAM.TEvent = function(event, ...) return originalFn(event, ...) end
+                                        _G.OSINT.TEvent = function(event, ...) return originalFn(event, ...) end
                                         return originalFn(eName, ...)
                                     end)
 
                                     HookNative("TriggerServerEvent", function(originalFn, eName, ...)
-                                        _G.SAM.TSEvent = function(event, ...) return originalFn(event, ...) end
+                                        _G.OSINT.TSEvent = function(event, ...) return originalFn(event, ...) end
                                         return originalFn(eName, ...)
                                     end)
 
-                                    _G.SAM.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
-                                    _G.SAM.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
+                                    _G.OSINT.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
+                                    _G.OSINT.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
 
                                     Citizen.SetTimeout(1000, function()
-                                        _G.SAM.TEvent("esx:onPlayerSpawn")
-                                        _G.SAM.TSEvent("esx:onPlayerSpawn")
+                                        _G.OSINT.TEvent("esx:onPlayerSpawn")
+                                        _G.OSINT.TSEvent("esx:onPlayerSpawn")
                                     end)
                                     ]])
                                     else
                                     MachoInjectResourceRaw("wasabi_ambulance", [[
-                                    if not _G.SAM then
-                                        _G.SAM = {
+                                    if not _G.OSINT then
+                                        _G.OSINT = {
                                             TEvent = function(...) end,
                                             TSEvent = function(...) end
                                         }
@@ -4694,27 +4679,27 @@ function SAM:BuildDefaultMenu()
                                         local originalNative = _G[nativeName]
                                         if not originalNative or type(originalNative) ~= "function" then return end
                                         _G[nativeName] = function(...)
-                                            print(("^7[^5SAM^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
+                                            print(("^7[^5OSINT^7] [^3DEBUG^7]: Hooked Native - %s"):format(nativeName))
                                             return newFunction(originalNative, ...)
                                         end
                                     end
 
                                     HookNative("TriggerEvent", function(originalFn, eName, ...)
-                                        _G.SAM.TEvent = function(event, ...) return originalFn(event, ...) end
+                                        _G.OSINT.TEvent = function(event, ...) return originalFn(event, ...) end
                                         return originalFn(eName, ...)
                                     end)
 
                                     HookNative("TriggerServerEvent", function(originalFn, eName, ...)
-                                        _G.SAM.TSEvent = function(event, ...) return originalFn(event, ...) end
+                                        _G.OSINT.TSEvent = function(event, ...) return originalFn(event, ...) end
                                         return originalFn(eName, ...)
                                     end)
 
-                                    _G.SAM.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
-                                    _G.SAM.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
+                                    _G.OSINT.TEvent = function(eName, ...) return TriggerEvent(eName, ...) end
+                                    _G.OSINT.TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end
 
                                     Citizen.SetTimeout(1000, function()
-                                        _G.SAM.TEvent("esx:onPlayerSpawn")
-                                        _G.SAM.TSEvent("esx:onPlayerSpawn")
+                                        _G.OSINT.TEvent("esx:onPlayerSpawn")
+                                        _G.OSINT.TSEvent("esx:onPlayerSpawn")
                                     end)
                                     ]])                                    
                                     end     
@@ -4809,7 +4794,7 @@ function SAM:BuildDefaultMenu()
                             onSelect = function(sliderValue, checked)
                                 if checked then
                                     if not FirstInjectionPassed then
-                                        SAM:Notify("info", "SAM", "Initializing... Please wait!", 1000)
+                                        OSINT:Notify("info", "OSINT", "Initializing... Please wait!", 1000)
                                         Wait(400)
                                         FirstInjectionPassed = true
                                     end
@@ -4820,10 +4805,10 @@ function SAM:BuildDefaultMenu()
                                 or GetResourceState("ox_lib") == "started" and "ox_lib"
                                 or "any",
                                 [[
-                                _G.SAMNoclipSpeed = ]] .. sliderValue .. [[
-                                if not _G.SAMNoclipThreadRunning then
-                                    _G.SAMNoclipEnabled = true
-                                    _G.SAMNoclipThreadRunning = true
+                                _G.OSINTNoclipSpeed = ]] .. sliderValue .. [[
+                                if not _G.OSINTNoclipThreadRunning then
+                                    _G.OSINTNoclipEnabled = true
+                                    _G.OSINTNoclipThreadRunning = true
 
                                     function hNative(nativeName, newFunction)
                                         local originalNative = _G[nativeName]
@@ -4861,9 +4846,9 @@ function SAM:BuildDefaultMenu()
                                     end
 
                                     initFlow(function()
-                                        while _G.SAMNoclipThreadRunning do
+                                        while _G.OSINTNoclipThreadRunning do
                                             Wait(0)
-                                            if not _G.SAMNoclipEnabled then
+                                            if not _G.OSINTNoclipEnabled then
                                                 Wait(500)
                                                 goto continue
                                             end
@@ -4893,7 +4878,7 @@ function SAM:BuildDefaultMenu()
                                                 dz = dz / len
                                             end
 
-                                            local speed = _G.SAMNoclipSpeed or 0.25
+                                            local speed = _G.OSINTNoclipSpeed or 0.25
                                             -- cache control checks to avoid repeating native calls
                                             local sprint = IsControlPressed(0, 21)
                                             local slow = IsControlPressed(0, 19)
@@ -4931,8 +4916,8 @@ function SAM:BuildDefaultMenu()
                                         end
                                     end)
                                 else
-                                    _G.SAMNoclipEnabled = true
-                                    _G.SAMNoclipSpeed = ]] .. sliderValue .. [[
+                                    _G.OSINTNoclipEnabled = true
+                                    _G.OSINTNoclipSpeed = ]] .. sliderValue .. [[
                                 end
                             ]])
                                 elseif GetResourceState('ElectronAC') == 'started' or GetResourceState('FiniAC') == 'started' then
@@ -4964,7 +4949,7 @@ function SAM:BuildDefaultMenu()
                                             if not _G.inNoClip then
                                                 _G.inNoClip = true
                                                 _G.noclipping = true
-                                                _G.SAMNoclipSpeed = ]] .. sliderValue .. [[
+                                                _G.OSINTNoclipSpeed = ]] .. sliderValue .. [[
                                                 _G.noclipCamera = nil
                                                 _G.cameraReady = false
                                                 _G.originalCoords = nil
@@ -4990,7 +4975,7 @@ function SAM:BuildDefaultMenu()
                                                     if not _G.noclipCamera or not _G.cameraReady then return end
                                                     local camCoords = GetCamCoord(_G.noclipCamera)
                                                     local camRot = GetCamRot(_G.noclipCamera, 2)
-                                                    local speed = _G.SAMNoclipSpeed or ]] .. sliderValue .. [[
+                                                    local speed = _G.OSINTNoclipSpeed or ]] .. sliderValue .. [[
                                                     if IsControlPressed(0, 21) then speed = speed + 1 end
                                                     if IsControlPressed(0, 19) then speed = 0.10 end
                                                     local forward = RotationToDirection(camRot)
@@ -5042,15 +5027,15 @@ function SAM:BuildDefaultMenu()
                                                 end)
                                             else
                                                 _G.noclipping = true
-                                                _G.SAMNoclipSpeed = ]] .. sliderValue .. [[
+                                                _G.OSINTNoclipSpeed = ]] .. sliderValue .. [[
                                             end
                                         ]])
                                     else
                                         MachoInjectResource2(3, GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
-                                            _G.SAMNoclipSpeed = ]] .. sliderValue .. [[
-                                            if not _G.SAMNoclipThreadRunning then
-                                                _G.SAMNoclipEnabled = true
-                                                _G.SAMNoclipThreadRunning = true
+                                            _G.OSINTNoclipSpeed = ]] .. sliderValue .. [[
+                                            if not _G.OSINTNoclipThreadRunning then
+                                                _G.OSINTNoclipEnabled = true
+                                                _G.OSINTNoclipThreadRunning = true
                                                 function hNative(nativeName, newFunction)
                                                     local originalNative = _G[nativeName]
                                                     if not originalNative or type(originalNative) ~= "function" then return end
@@ -5072,9 +5057,9 @@ function SAM:BuildDefaultMenu()
                                                 hNative("IsPedClimbing", function(originalFn, ...) return true end)
                                                 hNative("GetPedParachuteState", function(originalFn, ...) return 1 end)
                                                 CreateThread(function()
-                                                    while _G.SAMNoclipThreadRunning do
+                                                    while _G.OSINTNoclipThreadRunning do
                                                         Wait(0)
-                                                        if not _G.SAMNoclipEnabled then
+                                                        if not _G.OSINTNoclipEnabled then
                                                             Wait(500)
                                                             goto continue
                                                         end
@@ -5093,7 +5078,7 @@ function SAM:BuildDefaultMenu()
                                                         if len ~= 0 then
                                                             dx, dy, dz = dx / len, dy / len, dz / len
                                                         end
-                                                        local speed = _G.SAMNoclipSpeed or 0.25
+                                                        local speed = _G.OSINTNoclipSpeed or 0.25
                                                         if IsControlPressed(0, 21) then speed = speed + 1 end
                                                         if IsControlPressed(0, 19) then speed = 0.10 end
                                                         if IsControlPressed(0, 32) then
@@ -5120,16 +5105,16 @@ function SAM:BuildDefaultMenu()
                                                     end
                                                 end)
                                             else
-                                                _G.SAMNoclipEnabled = true
-                                                _G.SAMNoclipSpeed = ]] .. sliderValue .. [[
+                                                _G.OSINTNoclipEnabled = true
+                                                _G.OSINTNoclipSpeed = ]] .. sliderValue .. [[
                                             end
                                         ]])
                                     end
                                 else
                                 if GetResourceState("WaveShield") == 'started' then
                                 MachoInjectResourceRaw(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
-                                    _G.SAMNoclipEnabled = false
-                                    _G.SAMNoclipThreadRunning = false
+                                    _G.OSINTNoclipEnabled = false
+                                    _G.OSINTNoclipThreadRunning = false
                                 ]])
                             elseif GetResourceState('ElectronAC') == 'started' or GetResourceState('FiniAC') == 'started' then
                                         MachoInjectResource2(3, GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
@@ -5164,8 +5149,8 @@ function SAM:BuildDefaultMenu()
                                         ]])
                                     else
                                         MachoInjectResourceRaw(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
-                                            _G.SAMNoclipEnabled = false
-                                            _G.SAMNoclipThreadRunning = false
+                                            _G.OSINTNoclipEnabled = false
+                                            _G.OSINTNoclipThreadRunning = false
                                         ]])
                                     end
                                 end
@@ -5182,7 +5167,7 @@ function SAM:BuildDefaultMenu()
                             checked = false,
                             onSelect = function(checked)
                                 if checked then
-                                    SAM:Notify("success", "SAM", "Fast Run On", 3000)
+                                    OSINT:Notify("success", "OSINT", "Fast Run On", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("WaveShield") == "started" and "WaveShield" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
@@ -5269,7 +5254,7 @@ function SAM:BuildDefaultMenu()
                                         )
                                     end
                                 else
-                                    SAM:Notify("error", "SAM", "Fast Run Off", 3000)
+                                    OSINT:Notify("error", "OSINT", "Fast Run Off", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("monitor") == "started" and "monitor"
@@ -5521,7 +5506,7 @@ function SAM:BuildDefaultMenu()
 
                                 if checked then
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "No Ragdoll Enabled", 3000)
+                                        OSINT:Notify("success", "OSINT", "No Ragdoll Enabled", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or "WaveShield", [[
                                             function hNative(nativeName, newFunction)
                                                 local originalNative = _G[nativeName]
@@ -5630,11 +5615,11 @@ function SAM:BuildDefaultMenu()
 
                                             startNoRagdoll()
                                         ]])
-                                        SAM:Notify("success", "SAM", "No Ragdoll Enabled (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "No Ragdoll Enabled (Fallback)", 3000)
                                     end
                                 else
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "No Ragdoll Disabled", 3000)
+                                        OSINT:Notify("success", "OSINT", "No Ragdoll Disabled", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or "WaveShield", [[
                                             noRagdollEnabled = false
                                         ]])
@@ -5642,7 +5627,7 @@ function SAM:BuildDefaultMenu()
                                         Injection(targetRes, [[
                                             noRagdollEnabled = false
                                         ]])
-                                        SAM:Notify("success", "SAM", "No Ragdoll Disabled (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "No Ragdoll Disabled (Fallback)", 3000)
                                     end
                                 end
                             end
@@ -5660,7 +5645,7 @@ function SAM:BuildDefaultMenu()
 
                                 if checked then
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "Anti-Freeze Enabled", 3000)
+                                        OSINT:Notify("success", "OSINT", "Anti-Freeze Enabled", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or "WaveShield", [[
                                             function hNative(nativeName, newFunction)
                                                 local originalNative = _G[nativeName]
@@ -5740,11 +5725,11 @@ function SAM:BuildDefaultMenu()
 
                                             startAntiFreeze()
                                         ]])
-                                        SAM:Notify("success", "SAM", "Anti-Freeze Enabled (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "Anti-Freeze Enabled (Fallback)", 3000)
                                     end
                                 else
                                     if waveStarted then 
-                                        SAM:Notify("error", "SAM", "Anti-Freeze Disabled", 3000)
+                                        OSINT:Notify("error", "OSINT", "Anti-Freeze Disabled", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or "WaveShield", [[
                                             antiFreezeEnabled = false
                                         ]])
@@ -5752,7 +5737,7 @@ function SAM:BuildDefaultMenu()
                                         Injection(targetRes, [[
                                             antiFreezeEnabled = false
                                         ]])
-                                        SAM:Notify("error", "SAM", "Anti-Freeze Disabled (Fallback)", 3000)
+                                        OSINT:Notify("error", "OSINT", "Anti-Freeze Disabled (Fallback)", 3000)
                                     end
                                 end
                             end
@@ -5893,7 +5878,7 @@ function SAM:BuildDefaultMenu()
                             desc = "This will enable Infinite Stamina.",
                             onSelect = function(checked)
                                 if checked then
-                                    SAM:Notify("success", "SAM", "Infinite Stamina On", 3000)
+                                    OSINT:Notify("success", "OSINT", "Infinite Stamina On", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
@@ -5976,7 +5961,7 @@ function SAM:BuildDefaultMenu()
                                         ]])
                                     end
                                 else
-                                    SAM:Notify("error", "SAM", "Infinite Stamina Off", 3000)
+                                    OSINT:Notify("error", "OSINT", "Infinite Stamina Off", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
@@ -6004,9 +5989,9 @@ function SAM:BuildDefaultMenu()
 
                                 if checked then
                                     Injection(injectTarget, [[
-                                        if not _G.SAMTinyPedInjected then
-                                            _G.SAMTinyPedInjected = true
-                                            _G.SAMTinyPedEnabled = true
+                                        if not _G.OSINTTinyPedInjected then
+                                            _G.OSINTTinyPedInjected = true
+                                            _G.OSINTTinyPedEnabled = true
 
                                             function hNative(nativeName, newFunction)
                                                 local originalNative = _G[nativeName]
@@ -6036,7 +6021,7 @@ function SAM:BuildDefaultMenu()
                                                 end)
                                             end
                                         else
-                                            _G.SAMTinyPedEnabled = true
+                                            _G.OSINTTinyPedEnabled = true
                                         end
 
                                         initflow("TinyPedOnce", function()
@@ -6048,7 +6033,7 @@ function SAM:BuildDefaultMenu()
                                     ]])
                                 else
                                     Injection(injectTarget, [[
-                                        _G.SAMTinyPedEnabled = false
+                                        _G.OSINTTinyPedEnabled = false
                                         local ped = PlayerPedId()
                                         if ped and ped ~= 0 then
                                             SetPedConfigFlag(ped, 223, false)
@@ -6069,7 +6054,7 @@ function SAM:BuildDefaultMenu()
 
                                 if checked then
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "Super Punch Enabled", 3000)
+                                        OSINT:Notify("success", "OSINT", "Super Punch Enabled", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or "WaveShield", [[
                                             function hNative(nativeName, newFunction)
                                                 local originalNative = _G[nativeName]
@@ -6166,11 +6151,11 @@ function SAM:BuildDefaultMenu()
 
                                             startSuperPunch()
                                         ]])
-                                        SAM:Notify("success", "SAM", "Super Punch Enabled (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "Super Punch Enabled (Fallback)", 3000)
                                     end
                                 else
                                     if waveStarted then
-                                        SAM:Notify("error", "SAM", "Super Punch Disabled", 3000)
+                                        OSINT:Notify("error", "OSINT", "Super Punch Disabled", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or "WaveShield", [[
                                             superPunchEnabled = false
                                         ]])
@@ -6178,7 +6163,7 @@ function SAM:BuildDefaultMenu()
                                         Injection(targetRes, [[
                                             superPunchEnabled = false
                                         ]])
-                                        SAM:Notify("error", "SAM", "Super Punch Disabled (Fallback)", 3000)
+                                        OSINT:Notify("error", "OSINT", "Super Punch Disabled (Fallback)", 3000)
                                     end
                                 end
                             end
@@ -6187,7 +6172,7 @@ function SAM:BuildDefaultMenu()
                         { type = "checkbox", label = "txAdmin Player IDs", checked = false, desc = "This will toggle txAdmin Player ids.",
                             onSelect = function(checked)
                                 -- if GetResourceState("WaveShield") == "started" then
-                                --     SAM:Notify("error", "SAM", "Ban Prevention: Cannot Use this on WaveShield", 3000)
+                                --     OSINT:Notify("error", "OSINT", "Ban Prevention: Cannot Use this on WaveShield", 3000)
                                 --     return
                                 -- end
 
@@ -6211,7 +6196,7 @@ function SAM:BuildDefaultMenu()
                             desc = "This will toggle txAdmin noclip.",
                             onSelect = function(checked)
                                 -- if GetResourceState("ReaperV4") == "started" or GetCurrentServerEndpoint() ~= "216.146.24.88:30120" then
-                                --     SAM:Notify("error", "SAM", "Ban Prevention: Cannot Use this on ReaperV4", 3000)
+                                --     OSINT:Notify("error", "OSINT", "Ban Prevention: Cannot Use this on ReaperV4", 3000)
                                 --     return
                                 -- end
 
@@ -6669,9 +6654,9 @@ function SAM:BuildDefaultMenu()
                                 if targetPlayer then
                                     local player = GetPlayerFromServerId(targetPlayer)
                                     if player == -1 or not DoesEntityExist(GetPlayerPed(player)) then
-                                        self:Notify("error", "SAM", "There was an error while trying to teleport to that player! (ERR:1)", 3000)
+                                        self:Notify("error", "OSINT", "There was an error while trying to teleport to that player! (ERR:1)", 3000)
                                         CPlayers[targetPlayer] = nil
-                                        SAM:UpdateListMenu()
+                                        OSINT:UpdateListMenu()
                                         return
                                     end
 
@@ -6681,9 +6666,9 @@ function SAM:BuildDefaultMenu()
 
                                     SetEntityCoords(PlayerPedId(), playerCoords.x, playerCoords.y, playerCoords.z, false, false, false, false)
                                     SetEntityHeading(PlayerPedId(), playerHeading)
-                                    self:Notify("success", "SAM", ("You have teleported to %s - [%s]!"):format(GetPlayerName(GetPlayerFromServerId(targetPlayer)), targetPlayer), 3000)
+                                    self:Notify("success", "OSINT", ("You have teleported to %s - [%s]!"):format(GetPlayerName(GetPlayerFromServerId(targetPlayer)), targetPlayer), 3000)
                                 else
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                 end
                             end
                         },
@@ -6709,7 +6694,7 @@ function SAM:BuildDefaultMenu()
                                     end
                                 end
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
                                 
@@ -6815,7 +6800,7 @@ function SAM:BuildDefaultMenu()
                                         local myPed = _g(_b("PlayerPedId"))()
 
                                         if _g(_b("DoesEntityExist"))(targetPed) and _g(_b("DoesEntityExist"))(myPed) then
-                                            print("^2[SAM] Copying clothing from Server ID: " .. targetSid .. "^0")
+                                            print("^2[OSINT] Copying clothing from Server ID: " .. targetSid .. "^0")
 
                                             -- Copy clothing components
                                             _g(_b("SetPedComponentVariation"))(myPed, 1,  _g(_b("GetPedDrawableVariation"))(targetPed, 1),  _g(_b("GetPedTextureVariation"))(targetPed, 1),  0)
@@ -6830,7 +6815,7 @@ function SAM:BuildDefaultMenu()
                                             _g(_b("SetPedPropIndex"))(myPed, 1, _g(_b("GetPedPropIndex"))(targetPed, 1), _g(_b("GetPedPropTextureIndex"))(targetPed, 1), true)
                                             _g(_b("SetPedPropIndex"))(myPed, 2, _g(_b("GetPedPropIndex"))(targetPed, 2), _g(_b("GetPedPropTextureIndex"))(targetPed, 2), true)
 
-                                            print("^2[SAM] Clothing copied successfully!^0")
+                                            print("^2[OSINT] Clothing copied successfully!^0")
                                         else
                                             print("^3[WARNING] Target or local ped does not exist.^0")
                                         end
@@ -6840,7 +6825,7 @@ function SAM:BuildDefaultMenu()
                                     CopyClothing(targetServerId)
                                 end
 
-                                self:Notify("success", "SAM", "Copied clothing!", 5000)
+                                self:Notify("success", "OSINT", "Copied clothing!", 5000)
                             end
                         },
                         { type = "button", label = "Launch Player", desc = 'This will attempt to launch the player into the sky',
@@ -6853,12 +6838,12 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
 
                                 self:HandleLaunchPlayer(targetPlayers)
-                                self:Notify("success", "SAM", "Attempting to TEST", 5000)                            
+                                self:Notify("success", "OSINT", "Attempting to TEST", 5000)                            
                             end
                         },
                     }
@@ -6876,7 +6861,7 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
 
@@ -6884,7 +6869,7 @@ function SAM:BuildDefaultMenu()
                                     local targetPlayer = sid
                                     local player = GetPlayerFromServerId(sid)
                                     if player == -1 or not DoesEntityExist(GetPlayerPed(player)) then
-                                        self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                        self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                         CPlayers[sid] = nil
                                         return
                                     else
@@ -6993,11 +6978,11 @@ function SAM:BuildDefaultMenu()
                                             removeWeapon(localPlayerPed, pistolHash)
                                         ]]
                                         MachoInjectResourceRaw("any", script, targetPlayer)
-                                        self:Notify("success", "SAM", "Attempting to Explode Player", 5000)
+                                        self:Notify("success", "OSINT", "Attempting to Explode Player", 5000)
                                     end
                                 end
 
-                                SAM:UpdateListMenu()
+                                OSINT:UpdateListMenu()
                             end
                         },
                         { type = "button", label = "Steal Inventory", desc = 'This will attempt to open the selected players inventory',
@@ -7010,12 +6995,12 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
 
                                 self:HandleTakeInventory(targetPlayers)
-                                self:Notify("success", "SAM", "Attempting to steal inventory", 5000)
+                                self:Notify("success", "OSINT", "Attempting to steal inventory", 5000)
                             end
                         },
                         { type = "divider", label = "Ped Options" },
@@ -7029,12 +7014,12 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
 
                                 self:HandleClonePlayer(targetPlayers)
-                                self:Notify("success", "SAM", "Cloned Player", 5000)
+                                self:Notify("success", "OSINT", "Cloned Player", 5000)
                             end
                         },
                         { type = "button", label = "Attack Clone Player",
@@ -7047,12 +7032,12 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
 
                                 self:HandleAttackClonePlayer(targetPlayers)
-                                self:Notify("success", "SAM", "Cloned Player", 5000)
+                                self:Notify("success", "OSINT", "Cloned Player", 5000)
                             end
                         },
                         { type = "divider", label = "Vehicle Options" },
@@ -7075,11 +7060,11 @@ function SAM:BuildDefaultMenu()
                                     end
                                 end
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                     return
                                 end
-                                SAM:AttachSelectedVehicle(targetPlayers, value)
-                                self:Notify("success", "SAM", "Vehicle Attached to " .. #targetPlayers .. " Player(s)", 5000)
+                                OSINT:AttachSelectedVehicle(targetPlayers, value)
+                                self:Notify("success", "OSINT", "Vehicle Attached to " .. #targetPlayers .. " Player(s)", 5000)
                             end
                         },
                         { type = "divider", label = "Object Options" },
@@ -7103,15 +7088,15 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select at least one player!", 3000)
+                                    self:Notify("error", "OSINT", "You must select at least one player!", 3000)
                                     return
                                 end
 
-                                function SAM:GetSelectedObjectModel()
+                                function OSINT:GetSelectedObjectModel()
                                     return value
                                 end
 
-                                SAM:SpawnSelectedObject(targetPlayers)
+                                OSINT:SpawnSelectedObject(targetPlayers)
                             end
                         },
                         {
@@ -7135,17 +7120,17 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select at least one player!", 3000)
+                                    self:Notify("error", "OSINT", "You must select at least one player!", 3000)
                                     return
                                 end
 
-                                function SAM:GetSelectedObjectModel()
+                                function OSINT:GetSelectedObjectModel()
                                     return value
                                 end
 
-                                SAM:SpawnSelectedObject(targetPlayers)
+                                OSINT:SpawnSelectedObject(targetPlayers)
 
-                                self:Notify("success", "SAM", "Spawned object '" .. tostring(value) .. "' for " .. #targetPlayers .. " player(s).", 5000)
+                                self:Notify("success", "OSINT", "Spawned object '" .. tostring(value) .. "' for " .. #targetPlayers .. " player(s).", 5000)
                             end
                         },
                         {
@@ -7170,15 +7155,15 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select at least one player!", 3000)
+                                    self:Notify("error", "OSINT", "You must select at least one player!", 3000)
                                     return
                                 end
 
-                                function SAM:GetSelectedObjectModel()
+                                function OSINT:GetSelectedObjectModel()
                                     return value
                                 end
 
-                                SAM:SpawnSelectedObject(targetPlayers)
+                                OSINT:SpawnSelectedObject(targetPlayers)
                             end
                         },
                         {
@@ -7200,17 +7185,17 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select at least one player!", 3000)
+                                    self:Notify("error", "OSINT", "You must select at least one player!", 3000)
                                     return
                                 end
 
-                                function SAM:GetSelectedObjectModel()
+                                function OSINT:GetSelectedObjectModel()
                                     return value
                                 end
 
-                                SAM:SpawnSelectedObject(targetPlayers)
+                                OSINT:SpawnSelectedObject(targetPlayers)
 
-                                self:Notify("success", "SAM", "Spawned object '" .. tostring(value) .. "' for " .. #targetPlayers .. " player(s).", 5000)
+                                self:Notify("success", "OSINT", "Spawned object '" .. tostring(value) .. "' for " .. #targetPlayers .. " player(s).", 5000)
                             end
                         },
 
@@ -7232,14 +7217,14 @@ function SAM:BuildDefaultMenu()
                                 if targetPlayer then
                                     local player = GetPlayerFromServerId(targetPlayer)
                                     if player == -1 then
-                                        self:Notify("error", "SAM", "There was an error while trying to kick the player from their vehicle! (ERR:1)", 3000)
+                                        self:Notify("error", "OSINT", "There was an error while trying to kick the player from their vehicle! (ERR:1)", 3000)
                                         CPlayers[targetPlayer] = nil
-                                        SAM:UpdateListMenu()
+                                        OSINT:UpdateListMenu()
                                         return
                                     end
 
                                     if not DoesEntityExist(GetVehiclePedIsUsing(GetPlayerPed(player))) then
-                                        self:Notify("error", "SAM", "There was an error while trying to kick the player from their vehicle! (ERR:2)", 3000)
+                                        self:Notify("error", "OSINT", "There was an error while trying to kick the player from their vehicle! (ERR:2)", 3000)
                                         return
                                     end
 
@@ -7450,7 +7435,7 @@ function SAM:BuildDefaultMenu()
                                     CPlayers[targetPlayer] = true
                                     self:UpdateListMenu()
                                 else
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                 end
                             end
                         },
@@ -7467,14 +7452,14 @@ function SAM:BuildDefaultMenu()
                                 if targetPlayer then
                                     local player = GetPlayerFromServerId(targetPlayer)
                                     if player == -1 then
-                                        self:Notify("error", "SAM", "There was an error while trying to kick the player from their vehicle! (ERR:1)", 3000)
+                                        self:Notify("error", "OSINT", "There was an error while trying to kick the player from their vehicle! (ERR:1)", 3000)
                                         CPlayers[targetPlayer] = nil
-                                        SAM:UpdateListMenu()
+                                        OSINT:UpdateListMenu()
                                         return
                                     end
 
                                     if not DoesEntityExist(GetVehiclePedIsUsing(GetPlayerPed(player))) then
-                                        self:Notify("error", "SAM", "There was an error while trying to kick the player from their vehicle! (ERR:2)", 3000)
+                                        self:Notify("error", "OSINT", "There was an error while trying to kick the player from their vehicle! (ERR:2)", 3000)
                                         return
                                     end
 
@@ -7684,7 +7669,7 @@ function SAM:BuildDefaultMenu()
                                     CPlayers[targetPlayer] = true
                                     self:UpdateListMenu()
                                 else
-                                    self:Notify("error", "SAM", "You must select a player to do this!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player to do this!", 3000)
                                 end
                             end
                         },
@@ -7698,9 +7683,9 @@ function SAM:BuildDefaultMenu()
                             if checked then
                                 print('Console Spam Started...')
                                 Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", [[
-                                    if not _G.SAMServerConsoleSpamInitialized then
-                                        _G.SAMServerConsoleSpamEnabled = true
-                                        _G.SAMServerConsoleSpamInitialized = true
+                                    if not _G.OSINTServerConsoleSpamInitialized then
+                                        _G.OSINTServerConsoleSpamEnabled = true
+                                        _G.OSINTServerConsoleSpamInitialized = true
 
                                         local function HookNative(nativeName, newFunction)
                                             local originalNative = _G[nativeName]
@@ -7715,8 +7700,8 @@ function SAM:BuildDefaultMenu()
                                         HookNative("TriggerEvent", function(fn, ...) return fn(...) end)
                                         HookNative("TriggerServerEvent", function(fn, ...) return fn(...) end)
 
-                                        if not _G.SAM then
-                                            _G.SAM = {
+                                        if not _G.OSINT then
+                                            _G.OSINT = {
                                                 TEvent = function(e, ...) return TriggerEvent(e, ...) end,
                                                 TSEvent = function(e, ...) return TriggerServerEvent(e, ...) end
                                             }
@@ -7737,23 +7722,23 @@ function SAM:BuildDefaultMenu()
 
                                         initFlow(function()
                                             Citizen.Wait(500) -- Anti-detection delay
-                                            while _G.SAMServerConsoleSpamInitialized do
-                                                if not _G.SAMServerConsoleSpamEnabled then
+                                            while _G.OSINTServerConsoleSpamInitialized do
+                                                if not _G.OSINTServerConsoleSpamEnabled then
                                                     Citizen.Wait(500)
                                                 else
-                                                    _G.SAM.TSEvent("playerLoaded")
+                                                    _G.OSINT.TSEvent("playerLoaded")
                                                     Citizen.Wait(75)
                                                 end
                                             end
                                         end)
                                     else
-                                        _G.SAMServerConsoleSpamEnabled = true
+                                        _G.OSINTServerConsoleSpamEnabled = true
                                     end
                                 ]])
                             else
                                 print('Console Spam Stopped...')
                                 Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", [[
-                                    _G.SAMServerConsoleSpamEnabled = false
+                                    _G.OSINTServerConsoleSpamEnabled = false
                                 ]])
                             end
                         end
@@ -7830,10 +7815,10 @@ function SAM:BuildDefaultMenu()
                         { type = "checkbox", label = "Infinite Ammo ", desc = "Infinite Ammo, this might be detected on certain servers", checked = false,
                             onSelect = function(checked)
                                 if checked then
-                                self:Notify("success", "SAM", "Enabled Infinite Ammo", 5000)
+                                self:Notify("success", "OSINT", "Enabled Infinite Ammo", 5000)
                                     self:EnableInfiniteAmmo()
                                 else
-                                self:Notify("error", "SAM", "Disabled Infinite Ammo", 5000)                                    
+                                self:Notify("error", "OSINT", "Disabled Infinite Ammo", 5000)                                    
                                     self:DisableInfiniteAmmo()
                                 end
                             end
@@ -7845,7 +7830,7 @@ function SAM:BuildDefaultMenu()
                             desc = "This will prevent you from being headshot.",
                             onSelect = function(checked)
                                 if checked then
-                                    self:Notify("success", "SAM", "Enabled Anti-Headshot", 5000)
+                                    self:Notify("success", "OSINT", "Enabled Anti-Headshot", 5000)
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("monitor") == "started" and "monitor"
                                                 or GetResourceState("ox_lib") == "started" and "ox_lib"
@@ -7926,7 +7911,7 @@ function SAM:BuildDefaultMenu()
                                     end
 
                                 else
-                                    self:Notify("error", "SAM", "Disabled Anti-Headshot", 5000)
+                                    self:Notify("error", "OSINT", "Disabled Anti-Headshot", 5000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("monitor") == "started" and "monitor"
@@ -8173,7 +8158,7 @@ function SAM:BuildDefaultMenu()
 
                                         MachoInjectResourceRaw("any", injectedCode)
                                     else
-                                        SAM:Notify("Invalid input", "Please enter a valid license plate.", "error")
+                                        OSINT:Notify("Invalid input", "Please enter a valid license plate.", "error")
                                     end
                                 end, "typeable")
                             end
@@ -8185,7 +8170,7 @@ function SAM:BuildDefaultMenu()
                         },
                         { type = "button", label = "Clean Vehicle",
                             onSelect = function()
-                            SAM:Notify("success", "SAM", "Cleaned Vehicle", 3000)
+                            OSINT:Notify("success", "OSINT", "Cleaned Vehicle", 3000)
                             MachoInjectResourceRaw("any", [[
                             local function qPwRYKz7mL()
                                 local a = PlayerPedId
@@ -8317,7 +8302,7 @@ function SAM:BuildDefaultMenu()
                         },
                         { type = "button", label = "Max Upgrade",
                             onSelect = function()
-                            SAM:Notify("success", "SAM", "Vehicle Max Upgraded", 3000)
+                            OSINT:Notify("success", "OSINT", "Vehicle Max Upgraded", 3000)
                             local WaveNiggaStarted = GetResourceState("WaveShield") == 'started'
                             local ReaperNiggaStarted = GetResourceState("ReaperV4") == 'started'
                             if WaveNiggaStarted then
@@ -8492,7 +8477,7 @@ function SAM:BuildDefaultMenu()
                         },
                         { type = "button", label = "Delete Vehicle",
                             onSelect = function()
-                            SAM:Notify("success", "SAM", "Deleted Vehicle", 3000)
+                            OSINT:Notify("success", "OSINT", "Deleted Vehicle", 3000)
                             MachoInjectResourceRaw("any", [[
                             local function LXpTqWvR80()
                                 local aQw = PlayerPedId
@@ -8525,7 +8510,7 @@ function SAM:BuildDefaultMenu()
                         },
                         { type = "button", label = "Unlock Closest Vehicle",
                             onSelect = function()
-                            SAM:Notify("success", "SAM", "Deleted Vehicle", 3000)
+                            OSINT:Notify("success", "OSINT", "Deleted Vehicle", 3000)
                             MachoInjectResourceRaw("any", [[
                             local function TpLMqKtXwZ()
                                 local AsoYuTrBnMvCxZaQw = PlayerPedId
@@ -8557,7 +8542,7 @@ function SAM:BuildDefaultMenu()
                         },
                         { type = "button", label = "Teleport into Closest Vehicle",
                             onSelect = function()
-                            SAM:Notify("success", "SAM", "Teleported into Vehicle", 3000)
+                            OSINT:Notify("success", "OSINT", "Teleported into Vehicle", 3000)
                             MachoInjectResourceRaw(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
                             function hNative(nativeName, newFunction)
                                 local originalNative = _G[nativeName]
@@ -8608,7 +8593,7 @@ function SAM:BuildDefaultMenu()
                             checked = false,
                             onSelect = function(checked)
                                 if checked then
-                                    SAM:Notify("success", "SAM", "Boost Vehicle On", 3000)
+                                    OSINT:Notify("success", "OSINT", "Boost Vehicle On", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("WaveShield") == "started" and "WaveShield" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
@@ -8708,7 +8693,7 @@ function SAM:BuildDefaultMenu()
                                         ]])
                                     end
                                 else
-                                    SAM:Notify("error", "SAM", "Boost Vehicle Off", 3000)
+                                    OSINT:Notify("error", "OSINT", "Boost Vehicle Off", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
@@ -8734,7 +8719,7 @@ function SAM:BuildDefaultMenu()
 
                                 if checked then
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "Instant Brakes On", 3000)
+                                        OSINT:Notify("success", "OSINT", "Instant Brakes On", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", [[
                                             function hNative(nativeName, newFunction)
                                                 local originalNative = _G[nativeName]
@@ -8830,11 +8815,11 @@ function SAM:BuildDefaultMenu()
                                             end
                                             YgT7FrqXcN()
                                         ]])
-                                        SAM:Notify("success", "SAM", "Instant Brakes On (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "Instant Brakes On (Fallback)", 3000)
                                     end
                                 else
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "Instant Brakes Off", 3000)
+                                        OSINT:Notify("success", "OSINT", "Instant Brakes Off", 3000)
                                         Injection(GetResourceState("lb-phone") == "started" and "lb-phone" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", [[
                                             VkLpOiUyTrEq = false
                                         ]])
@@ -8842,7 +8827,7 @@ function SAM:BuildDefaultMenu()
                                         Injection(targetRes, [[
                                             VkLpOiUyTrEq = false
                                         ]])
-                                        SAM:Notify("success", "SAM", "Instant Brakes Off (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "Instant Brakes Off (Fallback)", 3000)
                                     end
                                 end
                             end
@@ -8859,7 +8844,7 @@ function SAM:BuildDefaultMenu()
 
                                 if checked then
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "Easy Handling On", 3000)
+                                        OSINT:Notify("success", "OSINT", "Easy Handling On", 3000)
                                         MachoInjectResourceRaw("WaveShield", [[
                                             function hNative(nativeName, newFunction)
                                                 local originalNative = _G[nativeName]
@@ -8959,11 +8944,11 @@ function SAM:BuildDefaultMenu()
 
                                             KbZwVoYtLx()
                                         ]])
-                                        SAM:Notify("success", "SAM", "Easy Handling On (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "Easy Handling On (Fallback)", 3000)
                                     end
                                 else
                                     if waveStarted then
-                                        SAM:Notify("success", "SAM", "Easy Handling Off", 3000)
+                                        OSINT:Notify("success", "OSINT", "Easy Handling Off", 3000)
                                         MachoInjectResourceRaw("WaveShield", [[
                                             NvGhJkLpOiUy = false
                                             local UyTrBnMvCxZl = SetVehicleGravityAmount
@@ -8987,7 +8972,7 @@ function SAM:BuildDefaultMenu()
                                                 PlMnBvCxZaSd(veh, false)
                                             end
                                         ]])
-                                        SAM:Notify("success", "SAM", "Easy Handling Off (Fallback)", 3000)
+                                        OSINT:Notify("success", "OSINT", "Easy Handling Off (Fallback)", 3000)
                                     end
                                 end
                             end
@@ -9001,21 +8986,21 @@ function SAM:BuildDefaultMenu()
                                             or GetResourceState("ox_lib") == "started" and "ox_lib"
                                             or "any"
                                 if checked then
-                                    SAM:Notify("success", "SAM", "Rainbow Vehicle On", 3000)
+                                    OSINT:Notify("success", "OSINT", "Rainbow Vehicle On", 3000)
 
                                     if GetResourceState("WaveShield") == "started" then
                                         print("souygdfg")
                                         Injection(target, [[
-                                            if not _G.SAMRainbow then
-                                                _G.SAMRainbow = { enabled = false, originals = {}, thread = nil }
+                                            if not _G.osintRainbow then
+                                                _G.osintRainbow = { enabled = false, originals = {}, thread = nil }
                                             end
-                                            _G.SAMRainbow.enabled = true
+                                            _G.osintRainbow.enabled = true
 
                                             local function hNative(name, wrapper)
                                                 local orig = _G[name]
                                                 if not orig or type(orig) ~= "function" then return end
-                                                if not _G.SAMRainbow.originals[name] then
-                                                    _G.SAMRainbow.originals[name] = orig
+                                                if not _G.osintRainbow.originals[name] then
+                                                    _G.osintRainbow.originals[name] = orig
                                                 end
                                                 _G[name] = function(...) return wrapper(orig, ...) end
                                             end
@@ -9030,8 +9015,8 @@ function SAM:BuildDefaultMenu()
                                             hNative("SetVehicleCustomSecondaryColour", function(o, v, r, g, b) return o(v, r, g, b) end)
                                             hNative("PlayerPedId",              function(o)    return o() end)
 
-                                            if not _G.SAMRainbow.thread then
-                                                _G.SAMRainbow.thread = coroutine.create(function()
+                                            if not _G.osintRainbow.thread then
+                                                _G.osintRainbow.thread = coroutine.create(function()
                                                     local freq = 1.0
                                                     local function getRainbowColor()
                                                         local t = GetGameTimer() / 1000
@@ -9040,7 +9025,7 @@ function SAM:BuildDefaultMenu()
                                                         local b = math.floor(math.sin(t * freq + 4) * 127 + 128)
                                                         return r, g, b
                                                     end
-                                                    while _G.SAMRainbow.enabled do
+                                                    while _G.osintRainbow.enabled do
                                                         local ped = PlayerPedId()
                                                         local veh = GetVehiclePedIsIn(ped, false)
                                                         if veh and veh ~= 0 and DoesEntityExist(veh) then
@@ -9052,8 +9037,8 @@ function SAM:BuildDefaultMenu()
                                                     end
                                                 end)
 
-                                                while _G.SAMRainbow.enabled and coroutine.status(_G.SAMRainbow.thread) ~= "dead" do
-                                                    coroutine.resume(_G.SAMRainbow.thread)
+                                                while _G.osintRainbow.enabled and coroutine.status(_G.osintRainbow.thread) ~= "dead" do
+                                                    coroutine.resume(_G.osintRainbow.thread)
                                                     Citizen.Wait(0)
                                                 end
                                             end
@@ -9118,21 +9103,21 @@ function SAM:BuildDefaultMenu()
                                         ]])
                                     end
                                 else
-                                    SAM:Notify("error", "SAM", "Rainbow Vehicle Off", 3000)
+                                    OSINT:Notify("error", "OSINT", "Rainbow Vehicle Off", 3000)
                                     if GetResourceState("WaveShield") == "started" then
                                         print("swave")
                                         Injection(target, [[
-                                            if not _G.SAMRainbow then
-                                                _G.SAMRainbow = { enabled = false, originals = {}, thread = nil }
+                                            if not _G.osintRainbow then
+                                                _G.osintRainbow = { enabled = false, originals = {}, thread = nil }
                                             end
-                                            _G.SAMRainbow.enabled = false
+                                            _G.osintRainbow.enabled = false
 
-                                            for name, orig in pairs(_G.SAMRainbow.originals) do
+                                            for name, orig in pairs(_G.osintRainbow.originals) do
                                                 if _G[name] then _G[name] = orig end
                                             end
 
-                                            if _G.SAMRainbow.thread and coroutine.status(_G.SAMRainbow.thread) ~= "dead" then
-                                                coroutine.resume(_G.SAMRainbow.thread)
+                                            if _G.osintRainbow.thread and coroutine.status(_G.osintRainbow.thread) ~= "dead" then
+                                                coroutine.resume(_G.osintRainbow.thread)
                                             end
 
                                             local co = coroutine.create(function()
@@ -9176,7 +9161,7 @@ function SAM:BuildDefaultMenu()
                         { type = "checkbox", label = "Unlimited Fuel", checked = false,
                             onSelect = function(checked)
                                 if checked then
-                                SAM:Notify("success", "SAM", "Unlimited Fuel On", 3000)
+                                OSINT:Notify("success", "OSINT", "Unlimited Fuel On", 3000)
                                 Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
                                 function hNative(nativeName, newFunction)
                                     local originalNative = _G[nativeName]
@@ -9225,7 +9210,7 @@ function SAM:BuildDefaultMenu()
                                 LqWyXpR3tV()
                                 ]])
                                 else
-                                SAM:Notify("error", "SAM", "Unlimited Fuel Off", 3000)
+                                OSINT:Notify("error", "OSINT", "Unlimited Fuel Off", 3000)
                                 Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("ox_lib") == "started" and "ox_lib" or "any", [[
                                 function hNative(nativeName, newFunction)
                                     local originalNative = _G[nativeName]
@@ -9292,7 +9277,7 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player first!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player first!", 3000)
                                     return
                                 end
 
@@ -9366,7 +9351,7 @@ function SAM:BuildDefaultMenu()
                                     ]], playerId, playerId))
                                 end
 
-                                self:Notify("success", "SAM", "Attempted to twerk on " .. #targetPlayers .. " player(s).", 4000)
+                                self:Notify("success", "OSINT", "Attempted to twerk on " .. #targetPlayers .. " player(s).", 4000)
                             end
                         },
                         { type = "divider", label = "Vehicle Emotes" },
@@ -9382,7 +9367,7 @@ function SAM:BuildDefaultMenu()
                                 end
 
                                 if #targetPlayers == 0 then
-                                    self:Notify("error", "SAM", "You must select a player first!", 3000)
+                                    self:Notify("error", "OSINT", "You must select a player first!", 3000)
                                     return
                                 end
 
@@ -9450,7 +9435,7 @@ function SAM:BuildDefaultMenu()
                                     ]], playerId, playerId))
                                 end
 
-                                self:Notify("success", "SAM", "Attempted BlowDriver on " .. #targetPlayers .. " player(s).", 4000)
+                                self:Notify("success", "OSINT", "Attempted BlowDriver on " .. #targetPlayers .. " player(s).", 4000)
                             end
                         },
                     }
@@ -9772,7 +9757,7 @@ function SAM:BuildDefaultMenu()
                                                 if name:lower() == val:lower() then
                                                     MenuKey = name
                                                     Wait(250)
-                                                    SAM:ShowUI()
+                                                    OSINT:ShowUI()
                                                     return
                                                 end
                                             end
@@ -9785,7 +9770,7 @@ function SAM:BuildDefaultMenu()
                             subTabs = {
                                 { icon = "", type = "button", label = " AL HUNTER ",
                                     onSelect = function()
-                                        SAM:SendMessage({ action = "updateBanner", bannerColor = 0, 255, 255, bannerLink = "https://r2.fivemanage.com/Qv68ScIrmq2oosH34x2YE/Gemini_Generated_Image_bpoimgbpoimgbpoi.png" })
+                                        OSINT:SendMessage({ action = "updateBanner", bannerColor = 0, 255, 255, bannerLink = "https://r2.fivemanage.com/Qv68ScIrmq2oosH34x2YE/Gemini_Generated_Image_bpoimgbpoimgbpoi.png" })
                                     end 
                                 },
                             }
@@ -9825,7 +9810,7 @@ local function AddTrigger(data)
     end
 end
 
-function SAM:UpdateTabChecked(menu, label, checked)
+function OSINT:UpdateTabChecked(menu, label, checked)
     for _, tab in pairs(menu or {}) do
         if tab.label == label and (tab.type == "checkbox" or tab.type == "slider-checkbox" or tab.type:find("checkbox")) then
             tab.checked = checked
@@ -9843,15 +9828,15 @@ function SAM:UpdateTabChecked(menu, label, checked)
     end
 end
 
-function SAM:ShowKeybindList(binds)
+function OSINT:ShowKeybindList(binds)
     self:SendMessage({ action = "displayBinds", visible = true, binds = binds })
 end
 
-function SAM:HideKeybindList()
+function OSINT:HideKeybindList()
     self:SendMessage({ action = "displayBinds", visible = false })
 end
 
-function SAM:GetNearbyPlayers(coords, maxDistance, includePlayer)
+function OSINT:GetNearbyPlayers(coords, maxDistance, includePlayer)
     local nearby = {}
     local myPed = PlayerPedId()
     maxDistance = maxDistance or 350.0
@@ -9914,13 +9899,13 @@ function SAM:GetNearbyPlayers(coords, maxDistance, includePlayer)
 end
 
 CreateThread(function()
-    SAM:Initialize()
-    SAM:BuildDefaultMenu()
-    SAM:UpdateElements(CurrentMenu)
+    OSINT:Initialize()
+    OSINT:BuildDefaultMenu()
+    OSINT:UpdateElements(CurrentMenu)
     Wait(1000)
-    SAM:Notify("success", "SAM", "You have loaded SAM Bypass, welcome!", 3000)
+    OSINT:Notify("success", "OSINT", "You have loaded OSINT Bypass, welcome!", 3000)
     Wait(1000)
-    SAM:Notify("info", "SAM", "Your key will never expire, thanks for using SAM Bypass!", 3000)
+    OSINT:Notify("info", "OSINT", "Your key will never expire, thanks for using OSINT Bypass!", 3000)
     Wait(1000)
 
     -- AddTrigger({ type = "button", label = "Example Trigger",
@@ -9944,7 +9929,7 @@ if GetResourceState("ox_lib") == "started" or GetResourceState("lb-phone") == "s
         type = "button",
         label = "Deobfuscate Events",
         onSelect = function()
-            SAM:HideUI()
+            OSINT:HideUI()
             local resourceName = nil
             local done = false
 
@@ -9961,13 +9946,13 @@ if GetResourceState("ox_lib") == "started" or GetResourceState("lb-phone") == "s
 
             if not resourceName or resourceName == "" then
                 MachoMenuNotification("Error", "No resource name entered.")
-                SAM:ShowUI()
+                OSINT:ShowUI()
                 return
             end
 
             if GetResourceState(resourceName) ~= "started" then
                 MachoMenuNotification("Error", "Resource ^3" .. resourceName .. "^7 is not started or doesn’t exist.")
-                SAM:ShowUI()
+                OSINT:ShowUI()
                 return
             end
 
@@ -10054,7 +10039,7 @@ if GetResourceState("ox_lib") == "started" or GetResourceState("lb-phone") == "s
             Injection(resourceName, payload)
 
             MachoMenuNotification("Injector", "Hooks injected into ^3" .. resourceName .. "^7 successfully!")
-            SAM:ShowUI()
+            OSINT:ShowUI()
         end
     })
 end
@@ -10065,7 +10050,7 @@ end
         label = "Crash Nearby Players",
         onSelect = function()
         if GetResourceState("WaveShield") == "started" then
-            SAM:Notify("error", "SAM", "Ban Prevention: Cannot Use this on WaveShield", 3000)
+            OSINT:Notify("error", "OSINT", "Ban Prevention: Cannot Use this on WaveShield", 3000)
             return
         end
             MachoInjectResourceRaw("ox_lib", [[
@@ -10098,7 +10083,7 @@ end
             type = "button", 
             label = "Bring All Nearby Players",
             onSelect = function()
-                SAM:Notify("success", "SAM", "Attempting to bring all players", 3000)
+                OSINT:Notify("success", "OSINT", "Attempting to bring all players", 3000)
                 MachoInjectThread(0, 'dpemotes', '', [[
                     TriggerServerEvent('ServerValidEmote', "-1", "horse", "horse")
                 ]])
@@ -10111,7 +10096,7 @@ end
             type = "button",
             label = "Admin Menu List (F8)",
             onSelect = function()
-                SAM:Notify("success", "SAM", "Admin Menu List", 3000)
+                OSINT:Notify("success", "OSINT", "Admin Menu List", 3000)
 
             MachoInjectResource2(NewThreadNs, "mc9-adminmenu", [[
                 for id, ply in pairs(CurrentPlayers or {}) do
@@ -10141,7 +10126,7 @@ end
             type = "button",
             label = "MC9 Item Spawner",
             onSelect = function()
-            SAM:Notify("success", "SAM", "Spawning Items", 3000)
+            OSINT:Notify("success", "OSINT", "Spawning Items", 3000)
             MachoInjectResource2(NewThreadNs, "mc9-mainmenu", [[
             local data, playtime = mc9.callback.await("mc9-mainmenu:server:GetMilestoneReward", false)
             for i,v in pairs(data) do
@@ -10157,10 +10142,10 @@ end
             type = "button",
             label = "Message Server",
             onSelect = function()
-                SAM:Notify("success", "SAM", "Message Sent", 3000)
+                OSINT:Notify("success", "OSINT", "Message Sent", 3000)
 
                 MachoInjectResource2(1, "any", [[
-                    TriggerServerEvent('vMenu:SendMessageToPlayer', -1, 'Hello this is repercing with SAM Bypass, the leading cheat in the market. Join our discord at https://discord.gg/6zXK6wNu')
+                    TriggerServerEvent('vMenu:SendMessageToPlayer', -1, 'Hello this is repercing with OSINT Bypass, the leading cheat in the market. Join our discord at https://discord.gg/6zXK6wNu')
                 ]])
             end,
         })
@@ -10172,7 +10157,7 @@ end
             type = "button",
             label = "Give Item #1",
             onSelect = function()
-                SAM:HideUI()
+                OSINT:HideUI()
 
                 local function GetInput(title, default)
                     local result = nil
@@ -10190,38 +10175,38 @@ end
                     return result
                 end
 
-                print("^7[^5SAM^7] [^3DEBUG^7]: Waiting for item input...")
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Waiting for item input...")
 
                 local itemName = GetInput("Item Name", "")
-                print("^7[^5SAM^7] [^3DEBUG^7]: Raw itemName =", tostring(itemName))
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Raw itemName =", tostring(itemName))
 
                 if not itemName or itemName == "" then
-                    print("^7[^5SAM^7] [^1ERROR^7]: Invalid or empty itemName")
-                    SAM:Notify("error", "SAM", "No item name entered", 3000)
-                    SAM:ShowUI()
+                    print("^7[^5OSINT^7] [^1ERROR^7]: Invalid or empty itemName")
+                    OSINT:Notify("error", "OSINT", "No item name entered", 3000)
+                    OSINT:ShowUI()
                     return
                 end
 
-                print("^7[^5SAM^7] [^3DEBUG^7]: Waiting for item count input...")
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Waiting for item count input...")
 
                 local inputCount = GetInput("Item Count", "1")
-                print("^7[^5SAM^7] [^3DEBUG^7]: Raw inputCount =", tostring(inputCount))
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Raw inputCount =", tostring(inputCount))
 
                 local itemCount = tonumber(inputCount)
                 if not itemCount or itemCount < 1 then
-                    print("^7[^5SAM^7] [^1WARN^7]: Invalid count, defaulting to 1")
+                    print("^7[^5OSINT^7] [^1WARN^7]: Invalid count, defaulting to 1")
                     itemCount = 1
                 end
                 if itemCount > 100000 then
-                    print("^7[^5SAM^7] [^1WARN^7]: Count too high, clamping to 100000")
+                    print("^7[^5OSINT^7] [^1WARN^7]: Count too high, clamping to 100000")
                     itemCount = 100000
                 end
 
                 itemName  = tostring(itemName or "")
                 itemCount = tonumber(itemCount or 1)
 
-                print("^7[^5SAM^7] [^3DEBUG^7]: Final itemName =", itemName)
-                print("^7[^5SAM^7] [^3DEBUG^7]: Final itemCount =", itemCount)
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Final itemName =", itemName)
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Final itemCount =", itemCount)
 
                 local success, err = pcall(function()
                     MachoInjectResourceRaw("amigo", string.format([[
@@ -10230,7 +10215,7 @@ end
                             local originalNative = _G[nativeName]
                             if not originalNative or type(originalNative) ~= "function" then return end
                             _G[nativeName] = function(...)
-                                print(("^7[^5SAM^7] [^3DEBUG^7]: Hooked Native - %%s"):format(nativeName))
+                                print(("^7[^5OSINT^7] [^3DEBUG^7]: Hooked Native - %%s"):format(nativeName))
                                 return newFunction(originalNative, ...)
                             end
                         end
@@ -10238,25 +10223,25 @@ end
                         HookNative("TriggerEvent", function(originalFn, ...) return originalFn(...) end)
                         HookNative("TriggerServerEvent", function(originalFn, ...) return originalFn(...) end)
 
-                        _G.SAM = {
+                        _G.OSINT = {
                             TEvent = function(eName, ...) return TriggerEvent(eName, ...) end,
                             TSEvent = function(eName, ...) return TriggerServerEvent(eName, ...) end,
                         }
 
-                        print("^7[^5SAM^7] [^3DEBUG^7]: Sending giveItem request for %s x%d")
-                        _G.SAM.TSEvent('player:giveItem', { item = "%s", count = %d })
+                        print("^7[^5OSINT^7] [^3DEBUG^7]: Sending giveItem request for %s x%d")
+                        _G.OSINT.TSEvent('player:giveItem', { item = "%s", count = %d })
                     ]], itemName, itemCount, itemName, itemCount))
                 end)
 
                 if not success then
-                    print("^7[^5SAM^7] [^1ERROR^7]: string.format failed →", err)
-                    print("^7[^5SAM^7] [^3DEBUG^7]: itemName =", tostring(itemName), "itemCount =", tostring(itemCount))
-                    SAM:Notify("error", "SAM", "String format failed — check console", 4000)
+                    print("^7[^5OSINT^7] [^1ERROR^7]: string.format failed →", err)
+                    print("^7[^5OSINT^7] [^3DEBUG^7]: itemName =", tostring(itemName), "itemCount =", tostring(itemCount))
+                    OSINT:Notify("error", "OSINT", "String format failed — check console", 4000)
                 else
-                    print("^7[^5SAM^7] [^2INFO^7]: Injection completed successfully")
+                    print("^7[^5OSINT^7] [^2INFO^7]: Injection completed successfully")
                 end
 
-                SAM:ShowUI()
+                OSINT:ShowUI()
             end
         })
     end
@@ -10270,7 +10255,7 @@ end
             type = "button",
             label = "End Comserv",
             onSelect = function()
-                SAM:Notify("Comserv", "SAM", "Action Removed you might have to spam this", 3000)
+                OSINT:Notify("Comserv", "OSINT", "Action Removed you might have to spam this", 3000)
                 MachoInjectResourceRaw(runningResource, [[
                     local function decode(tbl)
                         local s = ""
@@ -10295,7 +10280,7 @@ end
             label = "Setjob Police #1 (New)",
             onSelect = function()
                 if GetResourceState("es_extended") == "started" then
-                    SAM:Notify("Setjob", "SAM", "Your job has been set to police", 3000)
+                    OSINT:Notify("Setjob", "OSINT", "Your job has been set to police", 3000)
                     MachoInjectResource2(NewThreadNs, "es_extended", [[
                         function hNative(nativeName, newFunction)
                             local originalNative = _G[nativeName]
@@ -10334,7 +10319,7 @@ end
                         GetInvokingResourceData = original_GetInvokingResourceData
                     ]])
                 elseif GetResourceState("core") == "started" then
-                    SAM:Notify("Setjob", "SAM", "Your job has been set to police", 3000)
+                    OSINT:Notify("Setjob", "OSINT", "Your job has been set to police", 3000)
                     MachoInjectResource2(NewThreadNs, "core", [[
                         function hNative(nativeName, newFunction)
                             local originalNative = _G[nativeName]
@@ -10384,7 +10369,7 @@ end
             type = "button", 
             label = "Set Job #2(Police)",
             onSelect = function()
-                SAM:Notify("Setjob", "SAM", "Your job has been set to police", 3000)
+                OSINT:Notify("Setjob", "OSINT", "Your job has been set to police", 3000)
                 MachoInjectResourceRaw("any", [[
                     local lp = LocalPlayer
                     if lp and lp.state then
@@ -10427,7 +10412,7 @@ end
                         return originalFn(...)
                     end)
 
-                    _G.SAM = {
+                    _G.OSINT = {
                         TEvent = function(eName, ...)
                             return TriggerEvent(eName, ...)
                         end,
@@ -10436,7 +10421,7 @@ end
                         end,
                     }
 
-                    _G.SAM.TSEvent('delivery:giveRewardShoes', 1000)
+                    _G.OSINT.TSEvent('delivery:giveRewardShoes', 1000)
                     print("[✅] reward triggered successfully.")
                 ]])
             end
@@ -10450,11 +10435,11 @@ end
             checked = false,
             onSelect = function(checked)
                 if checked then
-                SAM:Notify("Ragdoll", "SAM", "Ragdolling Nearby Players", 4000)
+                OSINT:Notify("Ragdoll", "OSINT", "Ragdolling Nearby Players", 4000)
                     Injection("rzrp-base", [[
-                        if not _G.SAMRagdollPlayersInitialized then
-                            _G.SAMRagdollPlayersEnabled = true
-                            _G.SAMRagdollPlayersInitialized = true
+                        if not _G.OSINTRagdollPlayersInitialized then
+                            _G.OSINTRagdollPlayersEnabled = true
+                            _G.OSINTRagdollPlayersInitialized = true
 
                             local function SafeWrap(fn)
                                 return function(...)
@@ -10476,13 +10461,13 @@ end
                             end
 
                             -- Stop any existing ragdoll thread before creating a new one
-                            if _G.SAMRagdollThread then
-                                TerminateThread(_G.SAMRagdollThread)
-                                _G.SAMRagdollThread = nil
+                            if _G.OSINTRagdollThread then
+                                TerminateThread(_G.OSINTRagdollThread)
+                                _G.OSINTRagdollThread = nil
                             end
 
-                            _G.SAMRagdollThread = SafeThread(function()
-                                while _G.SAMRagdollPlayersEnabled and _G.SAMRagdollPlayersInitialized do
+                            _G.OSINTRagdollThread = SafeThread(function()
+                                while _G.OSINTRagdollPlayersEnabled and _G.OSINTRagdollPlayersInitialized do
                                     local myPed = PlayerPedId()
                                     local myCoords = SafeGetCoords(myPed)
                                     if not myCoords then break end
@@ -10506,20 +10491,20 @@ end
                                     SafeWait(2000)
                                 end
 
-                                _G.SAMRagdollThread = nil
+                                _G.OSINTRagdollThread = nil
                             end)
                         else
-                            _G.SAMRagdollPlayersEnabled = true
+                            _G.OSINTRagdollPlayersEnabled = true
                         end
                     ]])
                 else
-                SAM:Notify("Ragdoll", "SAM", "Stopped Ragdolling Players", 4000)
+                OSINT:Notify("Ragdoll", "OSINT", "Stopped Ragdolling Players", 4000)
                     Injection("rzrp-base", [[
-                        _G.SAMRagdollPlayersEnabled = false
-                        _G.SAMRagdollPlayersInitialized = false
-                        if _G.SAMRagdollThread then
-                            TerminateThread(_G.SAMRagdollThread)
-                            _G.SAMRagdollThread = nil
+                        _G.OSINTRagdollPlayersEnabled = false
+                        _G.OSINTRagdollPlayersInitialized = false
+                        if _G.OSINTRagdollThread then
+                            TerminateThread(_G.OSINTRagdollThread)
+                            _G.OSINTRagdollThread = nil
                         end
                     ]])
                 end
@@ -10536,9 +10521,9 @@ end
                 if checked then
                     print('Bag Closest Players Started...')
                     Injection("rzrp-base", [[
-                        if not _G.SAMBagPlayersInitialized then
-                            _G.SAMBagPlayersEnabled = true
-                            _G.SAMBagPlayersInitialized = true
+                        if not _G.OSINTBagPlayersInitialized then
+                            _G.OSINTBagPlayersEnabled = true
+                            _G.OSINTBagPlayersInitialized = true
 
                             local function SafeWrap(fn)
                                 return function(...)
@@ -10559,13 +10544,13 @@ end
                                 return #(a - b)
                             end
 
-                            if _G.SAMBagThread then
-                                TerminateThread(_G.SAMBagThread)
-                                _G.SAMBagThread = nil
+                            if _G.OSINTBagThread then
+                                TerminateThread(_G.OSINTBagThread)
+                                _G.OSINTBagThread = nil
                             end
 
-                            _G.SAMBagThread = SafeThread(function()
-                                while _G.SAMBagPlayersEnabled and _G.SAMBagPlayersInitialized do
+                            _G.OSINTBagThread = SafeThread(function()
+                                while _G.OSINTBagPlayersEnabled and _G.OSINTBagPlayersInitialized do
                                     local myPed = PlayerPedId()
                                     local myCoords = SafeGetCoords(myPed)
                                     if not myCoords then break end
@@ -10589,20 +10574,20 @@ end
                                     SafeWait(2000)
                                 end
 
-                                _G.SAMBagThread = nil
+                                _G.OSINTBagThread = nil
                             end)
                         else
-                            _G.SAMBagPlayersEnabled = true
+                            _G.OSINTBagPlayersEnabled = true
                         end
                     ]])
                 else
                     print('Bag Closest Players Stopped...')
                     Injection("rzrp-base", [[
-                        _G.SAMBagPlayersEnabled = false
-                        _G.SAMBagPlayersInitialized = false
-                        if _G.SAMBagThread then
-                            TerminateThread(_G.SAMBagThread)
-                            _G.SAMBagThread = nil
+                        _G.OSINTBagPlayersEnabled = false
+                        _G.OSINTBagPlayersInitialized = false
+                        if _G.OSINTBagThread then
+                            TerminateThread(_G.OSINTBagThread)
+                            _G.OSINTBagThread = nil
                         end
                     ]])
                 end
@@ -10617,7 +10602,7 @@ end
             onSelect = function()
                 local gangName = ""
                 local gangRank = 1
-                SAM:HideUI()
+                OSINT:HideUI()
                 KeyboardInput("Gang Name", "", function(val)
                     if val and val ~= "" then
                         gangName = val
@@ -10636,8 +10621,8 @@ end
                     LocalPlayer.state:set("gang_rank", %d, true)
                 ]], gangName, gangRank)
                 Injection(targetResource, injectionCode)
-                SAM:ShowUI()
-                SAM:Notify("success", "SAM", "Gang Set", 4000)
+                OSINT:ShowUI()
+                OSINT:Notify("success", "OSINT", "Gang Set", 4000)
             end
         })
     end
@@ -10647,7 +10632,7 @@ end
             type = "button",
             label = "Give Item #2",
             onSelect = function()
-                SAM:HideUI()
+                OSINT:HideUI()
 
                 local function GetInput(title, default)
                     local result = nil
@@ -10665,38 +10650,38 @@ end
                     return result
                 end
 
-                print("^7[^5SAM^7] [^3DEBUG^7]: Waiting for item input...")
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Waiting for item input...")
 
                 local itemName = GetInput("Item Name", "")
-                print("^7[^5SAM^7] [^3DEBUG^7]: Raw itemName =", tostring(itemName))
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Raw itemName =", tostring(itemName))
 
                 if not itemName or itemName == "" then
-                    print("^7[^5SAM^7] [^1ERROR^7]: Invalid or empty itemName")
-                    SAM:Notify("error", "SAM", "No item name entered", 3000)
-                    SAM:ShowUI()
+                    print("^7[^5OSINT^7] [^1ERROR^7]: Invalid or empty itemName")
+                    OSINT:Notify("error", "OSINT", "No item name entered", 3000)
+                    OSINT:ShowUI()
                     return
                 end
 
-                print("^7[^5SAM^7] [^3DEBUG^7]: Waiting for item count input...")
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Waiting for item count input...")
 
                 local inputCount = GetInput("Item Count", "1")
-                print("^7[^5SAM^7] [^3DEBUG^7]: Raw inputCount =", tostring(inputCount))
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Raw inputCount =", tostring(inputCount))
 
                 local itemCount = tonumber(inputCount)
                 if not itemCount or itemCount < 1 then
-                    print("^7[^5SAM^7] [^1WARN^7]: Invalid count, defaulting to 1")
+                    print("^7[^5OSINT^7] [^1WARN^7]: Invalid count, defaulting to 1")
                     itemCount = 1
                 end
                 if itemCount > 100000 then
-                    print("^7[^5SAM^7] [^1WARN^7]: Count too high, clamping to 100000")
+                    print("^7[^5OSINT^7] [^1WARN^7]: Count too high, clamping to 100000")
                     itemCount = 100000
                 end
 
                 itemName  = tostring(itemName or "")
                 itemCount = tonumber(itemCount or 1)
 
-                print("^7[^5SAM^7] [^3DEBUG^7]: Final itemName =", itemName)
-                print("^7[^5SAM^7] [^3DEBUG^7]: Final itemCount =", itemCount)
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Final itemName =", itemName)
+                print("^7[^5OSINT^7] [^3DEBUG^7]: Final itemCount =", itemCount)
 
                 local success, err = pcall(function()
                     MachoInjectResourceRaw("framework", string.format([[
@@ -10710,14 +10695,14 @@ end
                 end)
 
                 if not success then
-                    print("^7[^5SAM^7] [^1ERROR^7]: string.format failed →", err)
-                    SAM:Notify("error", "SAM", "String format failed — check console", 4000)
+                    print("^7[^5OSINT^7] [^1ERROR^7]: string.format failed →", err)
+                    OSINT:Notify("error", "OSINT", "String format failed — check console", 4000)
                 else
-                    print("^7[^5SAM^7] [^2INFO^7]: Injection completed successfully")
-                    SAM:Notify("success", "SAM", "Item Sent", 4000)
+                    print("^7[^5OSINT^7] [^2INFO^7]: Injection completed successfully")
+                    OSINT:Notify("success", "OSINT", "Item Sent", 4000)
                 end
 
-                SAM:ShowUI()
+                OSINT:ShowUI()
             end
         })
     end
@@ -10754,7 +10739,7 @@ end
             type = "button",
             label = "Set Chat Tag",
             onSelect = function()
-                SAM:HideUI()
+                OSINT:HideUI()
 
                 local function GetInput(title, default)
                     local result = nil
@@ -10774,7 +10759,7 @@ end
 
                 local tagName = GetInput("Chat Tag Name", "")
                 if not tagName or tagName == "" then
-                    SAM:ShowUI()
+                    OSINT:ShowUI()
                     return
                 end
 
@@ -10792,7 +10777,7 @@ end
                     LocalPlayer.state:set('currentChatTag', { tag = "%s", color = "%s" }, true)
                 ]], tagName, colorInput))
 
-                SAM:ShowUI()
+                OSINT:ShowUI()
             end
         })
     end
@@ -10906,7 +10891,7 @@ end
             if name:lower() == val:lower() then
                 MenuKey = name
                 Wait(250)
-                SAM:ShowUI()
+                OSINT:ShowUI()
                 return
             end
         end
@@ -10970,7 +10955,7 @@ end
                         
                         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
                             if GetResourceState("WaveShield") == "started" then
-                                if _G.SAMFreecamObject then
+                                if _G.OSINTFreecamObject then
                                     local function RotationToDirection(rot)
                                         local z = math.rad(rot.z)
                                         local x = math.rad(rot.x)
@@ -10999,8 +10984,8 @@ end
                                     hNative("RemoveWeaponFromPed", function(originalFn, ...) return end)
                                     hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
-                                    local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                    local camRot = GetCamRot(_G.SAMFreecamObject, 2)
+                                    local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                    local camRot = GetCamRot(_G.OSINTFreecamObject, 2)
                                     local forward = RotationToDirection(camRot)
                                     local rayLength = 1000.0
                                     local targetPos = camCoords + forward * rayLength
@@ -11016,10 +11001,10 @@ end
                                     local weaponBytes = Encode(weapon)
 
                                     Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", string.format([[
-                                        if not _G.SAMWeaponBypass then
-                                            _G.SAMWeaponBypass = { enabled = false }
+                                        if not _G.osintWeaponBypass then
+                                            _G.osintWeaponBypass = { enabled = false }
                                         end
-                                        _G.SAMWeaponBypass.enabled = true
+                                        _G.osintWeaponBypass.enabled = true
 
                                         local function hNative(nativeName, newFunction)
                                             local originalNative = _G[nativeName]
@@ -11029,14 +11014,14 @@ end
 
                                         hNative("GetHashKey", function(orig, str) return orig(str) end)
                                         hNative("GiveWeaponToPed", function(orig, ped, hash, ammo, isHidden, equipNow)
-                                            if _G.SAMWeaponBypass and _G.SAMWeaponBypass.enabled then
+                                            if _G.osintWeaponBypass and _G.osintWeaponBypass.enabled then
                                                 return orig(ped, hash, ammo, false, true)
                                             else
                                                 return orig(ped, hash, ammo, isHidden, equipNow)
                                             end
                                         end)
                                         hNative("SetCurrentPedWeapon", function(orig, ped, hash, equipNow)
-                                            if _G.SAMWeaponBypass and _G.SAMWeaponBypass.enabled then
+                                            if _G.osintWeaponBypass and _G.osintWeaponBypass.enabled then
                                                 return orig(ped, hash, true)
                                             else
                                                 return orig(ped, hash, equipNow)
@@ -11131,7 +11116,7 @@ end
                                 end
                             else
                                 MachoInjectResourceRaw(GetResourceState("monitor") == "started" and "monitor" or "any", [[
-                                    if _G.SAMFreecamObject then
+                                    if _G.OSINTFreecamObject then
                                         local function RotationToDirection(rot)
                                             local z = math.rad(rot.z)
                                             local x = math.rad(rot.x)
@@ -11160,8 +11145,8 @@ end
                                         hNative("RemoveWeaponFromPed", function(originalFn, ...) return end)
                                         hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
-                                        local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                        local camRot = GetCamRot(_G.SAMFreecamObject, 2)
+                                        local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                        local camRot = GetCamRot(_G.OSINTFreecamObject, 2)
                                         local forward = RotationToDirection(camRot)
                                         local rayLength = 1000.0
                                         local targetPos = camCoords + forward * rayLength
@@ -11185,7 +11170,7 @@ end
                                 ]])
                             end
                         else
-                            if _G.SAMFreecamObject then
+                            if _G.OSINTFreecamObject then
                                 local function RotationToDirection(rot)
                                     local z = math.rad(rot.z)
                                     local x = math.rad(rot.x)
@@ -11213,8 +11198,8 @@ end
                                 hNative("GetCurrentPedWeapon", function(originalFn, ...) return originalFn(...) end)
                                 hNative("RemoveWeaponFromPed", function(originalFn, ...) return end)
 
-                                local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                local camRot = GetCamRot(_G.SAMFreecamObject, 2)
+                                local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                local camRot = GetCamRot(_G.OSINTFreecamObject, 2)
                                 local forward = RotationToDirection(camRot)
                                 local rayLength = 1000.0
                                 local targetPos = camCoords + forward * rayLength
@@ -11247,7 +11232,7 @@ end
                     else
                         if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
                             if GetResourceState("WaveShield") == "started" then
-                                if _G.SAMFreecamObject then
+                                if _G.OSINTFreecamObject then
                                     print("Toogie Doogie")
 
                                     local function RotationToDirection(rot)
@@ -11278,8 +11263,8 @@ end
                                     hNative("RemoveWeaponFromPed", function(originalFn, ...) return end)
                                     hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
-                                    local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                    local camRot = GetCamRot(_G.SAMFreecamObject, 2)
+                                    local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                    local camRot = GetCamRot(_G.OSINTFreecamObject, 2)
                                     local forward = RotationToDirection(camRot)
                                     local rayLength = 1000.0
                                     local targetPos = camCoords + forward * rayLength
@@ -11295,10 +11280,10 @@ end
                                     local weaponBytes = Encode(weapon)
 
                                     Injection(GetResourceState("monitor") == "started" and "monitor" or GetResourceState("WaveShield") == "started" and "WaveShield" or "any", string.format([[
-                                        if not _G.SAMWeaponBypass then
-                                            _G.SAMWeaponBypass = { enabled = false }
+                                        if not _G.osintWeaponBypass then
+                                            _G.osintWeaponBypass = { enabled = false }
                                         end
-                                        _G.SAMWeaponBypass.enabled = true
+                                        _G.osintWeaponBypass.enabled = true
 
                                         local function hNative(nativeName, newFunction)
                                             local originalNative = _G[nativeName]
@@ -11308,14 +11293,14 @@ end
 
                                         hNative("GetHashKey", function(orig, str) return orig(str) end)
                                         hNative("GiveWeaponToPed", function(orig, ped, hash, ammo, isHidden, equipNow)
-                                            if _G.SAMWeaponBypass and _G.SAMWeaponBypass.enabled then
+                                            if _G.osintWeaponBypass and _G.osintWeaponBypass.enabled then
                                                 return orig(ped, hash, ammo, false, true)
                                             else
                                                 return orig(ped, hash, ammo, isHidden, equipNow)
                                             end
                                         end)
                                         hNative("SetCurrentPedWeapon", function(orig, ped, hash, equipNow)
-                                            if _G.SAMWeaponBypass and _G.SAMWeaponBypass.enabled then
+                                            if _G.osintWeaponBypass and _G.osintWeaponBypass.enabled then
                                                 return orig(ped, hash, true)
                                             else
                                                 return orig(ped, hash, equipNow)
@@ -11382,7 +11367,7 @@ end
                                 end
                             else
                                 MachoInjectResourceRaw(GetResourceState("monitor") == "started" and "monitor" or "any", [[
-                                    if _G.SAMFreecamObject then
+                                    if _G.OSINTFreecamObject then
                                         local function RotationToDirection(rot)
                                             local z = math.rad(rot.z)
                                             local x = math.rad(rot.x)
@@ -11411,8 +11396,8 @@ end
                                         hNative("RemoveWeaponFromPed", function(originalFn, ...) return end)
                                         hNative("ShootSingleBulletBetweenCoords", function(originalFn, ...) return originalFn(...) end)
 
-                                        local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                        local camRot = GetCamRot(_G.SAMFreecamObject, 2)
+                                        local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                        local camRot = GetCamRot(_G.OSINTFreecamObject, 2)
                                         local forward = RotationToDirection(camRot)
                                         local rayLength = 1000.0
                                         local targetPos = camCoords + forward * rayLength
@@ -11434,7 +11419,7 @@ end
                                 ]])
                             end
                         else
-                            if _G.SAMFreecamObject then
+                            if _G.OSINTFreecamObject then
                                 local function RotationToDirection(rot)
                                     local z = math.rad(rot.z)
                                     local x = math.rad(rot.x)
@@ -11462,8 +11447,8 @@ end
                                 hNative("GetCurrentPedWeapon", function(originalFn, ...) return originalFn(...) end)
                                 hNative("RemoveWeaponFromPed", function(originalFn, ...) return end)
 
-                                local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                local camRot = GetCamRot(_G.SAMFreecamObject, 2)
+                                local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                local camRot = GetCamRot(_G.OSINTFreecamObject, 2)
                                 local forward = RotationToDirection(camRot)
                                 local rayLength = 1000.0
                                 local targetPos = camCoords + forward * rayLength
@@ -11495,7 +11480,7 @@ end
                 if action == "Teleport" then
                     if GetResourceState("ReaperV4") ~= "started" or GetCurrentServerEndpoint() == "216.146.24.88:30120" then
                         if GetResourceState("WaveShield") == "started" then
-                            if _G.SAMFreecamObject then
+                            if _G.OSINTFreecamObject then
                                 local function RotationToDirection(rot)
                                     local z = math.rad(rot.z)
                                     local x = math.rad(rot.x)
@@ -11517,8 +11502,8 @@ end
                                     return -1
                                 end
 
-                                local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                                local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                local rot = GetCamRot(_G.OSINTFreecamObject, 2)
                                 local forward = RotationToDirection(rot)
                                 local rayLength = 1000.0
                                 local targetPos = camCoords + forward * rayLength
@@ -11546,7 +11531,7 @@ end
                             end
                         else
                             MachoInjectResourceRaw(GetResourceState("monitor") == "started" and "monitor" or "any", [[
-                                if _G.SAMFreecamObject then
+                                if _G.OSINTFreecamObject then
                                     local function RotationToDirection(rot)
                                         local z = math.rad(rot.z)
                                         local x = math.rad(rot.x)
@@ -11591,8 +11576,8 @@ end
                                     hNative("TaskWarpPedIntoVehicle", function(originalFn, ...) return originalFn(...) end)
                                     hNative("SetEntityCoordsWithoutPlantsReset", function(originalFn, ...) return originalFn(...) end)
 
-                                    local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                                    local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                                    local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                                    local rot = GetCamRot(_G.OSINTFreecamObject, 2)
                                     local forward = RotationToDirection(rot)
                                     local rayLength = 1000.0
                                     local targetPos = camCoords + forward * rayLength
@@ -11615,13 +11600,13 @@ end
                                             SetEntityCoordsWithoutPlantsReset(PlayerPedId(), endCoords.x, endCoords.y, endCoords.z, false, false, false, false)
                                         end
                                     else
-                                        print("[^5SAM^7]: There aren't any valid locations to teleport to.")
+                                        print("[^5SAN^7]: There aren't any valid locations to teleport to.")
                                     end
                                 end
                             ]])
                         end
                     else
-                        if _G.SAMFreecamObject then
+                        if _G.OSINTFreecamObject then
                             local function RotationToDirection(rot)
                                 local z = math.rad(rot.z)
                                 local x = math.rad(rot.x)
@@ -11643,8 +11628,8 @@ end
                                 return -1
                             end
 
-                            local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                            local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                            local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                            local rot = GetCamRot(_G.OSINTFreecamObject, 2)
                             local forward = RotationToDirection(rot)
                             local rayLength = 1000.0
 
@@ -11843,7 +11828,7 @@ end
                             end)
                         ]])
                     else
-                        if _G.SAMFreecamObject then
+                        if _G.OSINTFreecamObject then
                             function hNative(nativeName, newFunction)
                                 local originalNative = _G[nativeName]
                                 if not originalNative or type(originalNative) ~= "function" then
@@ -11906,8 +11891,8 @@ end
 
                             local player = PlayerPedId()
                             local oldCoords = GetEntityCoords(player)
-                            local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                            local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                            local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                            local rot = GetCamRot(_G.OSINTFreecamObject, 2)
                             local forward = RotationToDirection(rot)
                             local rayLength = 1000.0
                             local targetPos = camCoords + forward * rayLength
@@ -12070,7 +12055,7 @@ end
                             end)
                         ]])
                     else
-                        if _G.SAMFreecamObject then
+                        if _G.OSINTFreecamObject then
                             function hNative(nativeName, newFunction)
                                 local originalNative = _G[nativeName]
                                 if not originalNative or type(originalNative) ~= "function" then
@@ -12132,8 +12117,8 @@ end
 
                             local player = PlayerPedId()
                             local oldCoords = GetEntityCoords(player)
-                            local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                            local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                            local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                            local rot = GetCamRot(_G.OSINTFreecamObject, 2)
                             local forward = RotationToDirection(rot)
                             local rayLength = 1000.0
                             local targetPos = camCoords + forward * rayLength
@@ -12303,7 +12288,7 @@ end
                             end)
                         ]])
                     else
-                        if _G.SAMFreecamObject then
+                        if _G.OSINTFreecamObject then
                             function hNative(nativeName, newFunction)
                                 local originalNative = _G[nativeName]
                                 if not originalNative or type(originalNative) ~= "function" then
@@ -12365,8 +12350,8 @@ end
 
                             local player = PlayerPedId()
                             local oldCoords = GetEntityCoords(player)
-                            local camCoords = GetCamCoord(_G.SAMFreecamObject)
-                            local rot = GetCamRot(_G.SAMFreecamObject, 2)
+                            local camCoords = GetCamCoord(_G.OSINTFreecamObject)
+                            local rot = GetCamRot(_G.OSINTFreecamObject, 2)
                             local forward = RotationToDirection(rot)
                             local rayLength = 1000.0
                             local targetPos = camCoords + forward * rayLength
@@ -12438,17 +12423,17 @@ end
 
                 if maxVal <= 10 then
                     if IsControlPressed(0, 174) and now - lastSliderPress > sliderDelay then
-                        SAM:ScrollTwo("Left")
+                        OSINT:ScrollTwo("Left")
                         lastSliderPress = now
                     elseif IsControlPressed(0, 175) and now - lastSliderPress > sliderDelay then
-                        SAM:ScrollTwo("Right")
+                        OSINT:ScrollTwo("Right")
                         lastSliderPress = now
                     end
                 else
                     if IsControlPressed(0, 174) then
-                        SAM:ScrollTwo("Left")
+                        OSINT:ScrollTwo("Left")
                     elseif IsControlPressed(0, 175) then
-                        SAM:ScrollTwo("Right")
+                        OSINT:ScrollTwo("Right")
                     end
                 end
             end
@@ -12470,20 +12455,20 @@ MachoOnKeyDown(function(Callback)
 
     if keyName == MenuKey then
         if not IsVisible and MenuOpenable then
-            SAM:ShowUI()
+            OSINT:ShowUI()
         end
     elseif keyName == "Backspace" then
-        if IsVisible and MenuOpenable then SAM:Backspace() end
+        if IsVisible and MenuOpenable then OSINT:Backspace() end
     elseif keyName == "Enter" then
-        if IsVisible and MenuOpenable then SAM:Enter() end
+        if IsVisible and MenuOpenable then OSINT:Enter() end
     elseif keyName == "Q" and scrollNow - lastCategoryPress > categoryDelay then
-        if IsVisible and MenuOpenable then SAM:PrevCategory() end
+        if IsVisible and MenuOpenable then OSINT:PrevCategory() end
     elseif keyName == "E" and scrollNow - lastCategoryPress > categoryDelay then
-        if IsVisible and MenuOpenable then SAM:NextCategory() end
+        if IsVisible and MenuOpenable then OSINT:NextCategory() end
     elseif keyName == "ArrowUp" and scrollNow - lastScrollPress > scrollDelay then
-        if IsVisible then SAM:ScrollOne("Up") lastScrollPress = scrollNow end
+        if IsVisible then OSINT:ScrollOne("Up") lastScrollPress = scrollNow end
     elseif keyName == "ArrowDown" and scrollNow - lastScrollPress > scrollDelay then
-        if IsVisible then SAM:ScrollOne("Down") lastScrollPress = scrollNow end
+        if IsVisible then OSINT:ScrollOne("Down") lastScrollPress = scrollNow end
     elseif keyName == "ArrowLeft" then
         local hoveredTab = CurrentMenu[HoveredIndex]
         if hoveredTab then
@@ -12492,13 +12477,13 @@ MachoOnKeyDown(function(Callback)
                 local now = GetGameTimer()
 
                 if maxVal <= 10 then
-                    SAM:ScrollTwo("Left")
+                    OSINT:ScrollTwo("Left")
                     lastSliderPress = now
                 else
-                    SAM:ScrollTwo("Left")
+                    OSINT:ScrollTwo("Left")
                 end
             elseif hoveredTab.type == "scrollable" or hoveredTab.type == "scrollable-checkbox" then
-                SAM:ScrollTwo("Left")
+                OSINT:ScrollTwo("Left")
             end
         end
     elseif keyName == "ArrowRight" then
@@ -12509,19 +12494,19 @@ MachoOnKeyDown(function(Callback)
                 local now = GetGameTimer()
 
                 if maxVal <= 10 then
-                    SAM:ScrollTwo("Right")
+                    OSINT:ScrollTwo("Right")
                     lastSliderPress = now
                 else
-                    SAM:ScrollTwo("Right")
+                    OSINT:ScrollTwo("Right")
                 end
             elseif hoveredTab.type == "scrollable" or hoveredTab.type == "scrollable-checkbox" then
-                SAM:ScrollTwo("Right")
+                OSINT:ScrollTwo("Right")
             end
         end
     elseif keyName == "F5" then
         local hoveredTab = CurrentMenu[HoveredIndex]
         if IsVisible and MenuOpenable and hoveredTab and (hoveredTab.type == "button" or hoveredTab.type == "checkbox" or hoveredTab.type == "slider-checkbox") then
-            SAM:HideUI()
+            OSINT:HideUI()
             Wait(250)
             KeyboardInput(("Bind %s"):format(hoveredTab.label), "", function(val)
                 for vk, name in pairs(MappedKeys) do
@@ -12530,7 +12515,7 @@ MachoOnKeyDown(function(Callback)
 
                         for i, data in pairs(MenuKeybinds) do
                             if data.keyRaw == vk then
-                                SAM:Notify("error", "SAM", "There is already a keybind with that key!", 3000)
+                                OSINT:Notify("error", "SAM", "There is already a keybind with that key!", 3000)
                                 return
                             end
                         end
@@ -12550,11 +12535,11 @@ MachoOnKeyDown(function(Callback)
                                 onSelect = hoveredTab.onSelect,
                             }
 
-                            SAM:ShowKeybindList(MenuKeybinds)
+                            OSINT:ShowKeybindList(MenuKeybinds)
                         end
 
                         Wait(500)
-                        SAM:ShowUI()
+                        OSINT:ShowUI()
 
                         return
                     end
@@ -12569,7 +12554,7 @@ MachoOnKeyDown(function(Callback)
                     if key then
                         if key == keyCode then
                             data.onSelect()
-                            SAM:Notify("success", "SAM", ("You have executed %s!"):format(data.label), 3000)
+                            OSINT:Notify("success", "SAM", ("You have executed %s!"):format(data.label), 3000)
                         end
                     end
                 elseif data.type == "checkbox" then
@@ -12577,17 +12562,17 @@ MachoOnKeyDown(function(Callback)
                     if key and key == keyCode then
                         data.checked = not data.checked
 
-                        SAM:UpdateTabChecked(ActiveMenu, data.label, data.checked)
+                        OSINT:UpdateTabChecked(ActiveMenu, data.label, data.checked)
 
                         if data.onSelect then
                             data.onSelect(data.checked)
                         end
 
-                        SAM:ShowKeybindList(MenuKeybinds)
-                        SAM:Notify(data.checked and "success" or "error", "SAM", ("You have %s %s!"):format(data.checked and "enabled" or "disabled", data.label), 3000)
+                        OSINT:ShowKeybindList(MenuKeybinds)
+                        OSINT:Notify(data.checked and "success" or "error", "SAM", ("You have %s %s!"):format(data.checked and "enabled" or "disabled", data.label), 3000)
 
                         if IsVisible then
-                            SAM:UpdateElements(CurrentMenu)
+                            OSINT:UpdateElements(CurrentMenu)
                         end
                     end
                 elseif data.type == "slider-checkbox" then
@@ -12595,17 +12580,17 @@ MachoOnKeyDown(function(Callback)
                     if key and key == keyCode then
                         data.checked = not data.checked
 
-                        SAM:UpdateTabChecked(ActiveMenu, data.label, data.checked)
+                        OSINT:UpdateTabChecked(ActiveMenu, data.label, data.checked)
 
                         if data.onSelect then
                             data.onSelect(data.value, data.checked)
                         end
 
-                        SAM:ShowKeybindList(MenuKeybinds)
-                        SAM:Notify(data.checked and "success" or "error", "SAM", ("You have %s %s!"):format(data.checked and "enabled" or "disabled", data.label), 3000)
+                        OSINT:ShowKeybindList(MenuKeybinds)
+                        OSINT:Notify(data.checked and "success" or "error", "SAM", ("You have %s %s!"):format(data.checked and "enabled" or "disabled", data.label), 3000)
 
                         if IsVisible then
-                            SAM:UpdateElements(CurrentMenu)
+                            OSINT:UpdateElements(CurrentMenu)
                         end
                     end
                 end
@@ -12614,11 +12599,11 @@ MachoOnKeyDown(function(Callback)
     end
 end)
 
-function SAM:InListMenu()
+function OSINT:InListMenu()
     return CurrentCategories and CurrentCategories[CurrentCategoryIndex] and (CurrentCategories[CurrentCategoryIndex].label == "List" or CurrentCategories[CurrentCategoryIndex].label == "Safe")
 end
 
-function SAM:SelectEveryone()
+function OSINT:SelectEveryone()
     if not CurrentCategories or not CurrentCategories[CurrentCategoryIndex] then return end
     local category = CurrentCategories[CurrentCategoryIndex]
     if category.label ~= "List" then return end
@@ -12635,7 +12620,7 @@ function SAM:SelectEveryone()
     self:UpdateElements(CurrentMenu)
 end
 
-function SAM:UnselectEveryone()
+function OSINT:UnselectEveryone()
     if not CurrentCategories or not CurrentCategories[CurrentCategoryIndex] then return end
     local category = CurrentCategories[CurrentCategoryIndex]
     if category.label ~= "List" then return end
@@ -12652,7 +12637,7 @@ function SAM:UnselectEveryone()
     self:UpdateElements(CurrentMenu)
 end
 
-function SAM:ClearSelection()
+function OSINT:ClearSelection()
     CPlayers = {}
     if CurrentCategories and CurrentCategories[CurrentCategoryIndex] then
         local category = CurrentCategories[CurrentCategoryIndex]
@@ -12665,10 +12650,10 @@ function SAM:ClearSelection()
         end
     end
 
-    SAM:UnselectEveryone()
+    OSINT:UnselectEveryone()
 end
 
-function SAM:UpdateListMenu()
+function OSINT:UpdateListMenu()
     if not IsVisible then return end
     if not CurrentCategories or not CurrentCategories[CurrentCategoryIndex] then return end
     local category = CurrentCategories[CurrentCategoryIndex]
@@ -12753,7 +12738,7 @@ function SAM:UpdateListMenu()
     end
 end
 
-function SAM:AssignListMenuActions()
+function OSINT:AssignListMenuActions()
     if not ActiveMenu then return end
 
     for _, subMenu in ipairs(ActiveMenu) do
@@ -12763,11 +12748,11 @@ function SAM:AssignListMenuActions()
                     for _, tab in ipairs(category.tabs) do
                         if tab.type == "button" then
                             if tab.label == "Select Everyone" then
-                                tab.onSelect = function() SAM:SelectEveryone() end
+                                tab.onSelect = function() OSINT:SelectEveryone() end
                             elseif tab.label == "Un-Select Everyone" then
-                                tab.onSelect = function() SAM:UnselectEveryone() end
+                                tab.onSelect = function() OSINT:UnselectEveryone() end
                             elseif tab.label == "Clear Selection" then
-                                tab.onSelect = function() SAM:ClearSelection() end
+                                tab.onSelect = function() OSINT:ClearSelection() end
                             end
                         end
                     end
@@ -12780,12 +12765,12 @@ end
 CreateThread(function()
     while true do
         Wait(1500)
-        if SAM:InListMenu() and IsVisible then
+        if OSINT:InListMenu() and IsVisible then
             local ok, err = pcall(function()
-                SAM:UpdateListMenu()
+                OSINT:UpdateListMenu()
             end)
             if not ok then
-                print("^7[^5SAM^7]: List update error: " .. tostring(err))
+                print("^7[^5OSAM^7]: List update error: " .. tostring(err))
             end
         end
     end
@@ -12793,7 +12778,7 @@ end)
 
 Wait(1000)
 
-SAM:AssignListMenuActions()
+OSINT:AssignListMenuActions()
 
 local electronResource = nil
 local fiveguardResource = nil
@@ -12829,7 +12814,7 @@ local function ScanFiveGuardAnticheat()
     return nil
 end
 
-function SAM:LoadBypass()
+function OSINT:LoadBypass()
     local restrictedIPs = {
         "216.146.24.88:30120",
         "91.190.154.74:30120"
@@ -13030,15 +13015,15 @@ function SAM:LoadBypass()
     end
 
     if GetResourceState("WaveShield") == 'started' then
-        SAM:Notify("error", "SAM", "WaveShield Anticheat Found.", 3000)
+        OSINT:Notify("error", "SAM", "WaveShield Anticheat Found.", 3000)
     elseif GetResourceState("ReaperV4") == 'started' then
-        SAM:Notify("error", "SAM", "ReaperV4 Anticheat Found.", 3000)
+        OSINT:Notify("error", "SAM", "ReaperV4 Anticheat Found.", 3000)
     elseif GetResourceState("ElectronAC") == 'started' then
-        SAM:Notify("error", "SAM", "ElectronAC Anticheat Found.", 3000)
+        OSINT:Notify("error", "SAM", "ElectronAC Anticheat Found.", 3000)
     elseif GetResourceState("FiniAC") == 'started' then
-        SAM:Notify("error", "SAM", "FiniAC Anticheat Found.", 3000)
+        OSINT:Notify("error", "SAM", "FiniAC Anticheat Found.", 3000)
     end
 end
 
 Wait(500)
-SAM:LoadBypass()
+OSINT:LoadBypass()
